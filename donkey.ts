@@ -11,8 +11,6 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
 
   var matcher = match(clientRequest)
 
-  console.log(clientRequest.headers.host)
-
   if (!matcher) {
     clientResponse.writeHead(503)
     clientResponse.end('No match on gateway')
