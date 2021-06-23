@@ -1,6 +1,6 @@
 # Donkey, an API gateway in less than 500 lines of code
 
-A configuration based gateway with minimal features written in TypeScript
+A configuration based gateway with minimal features written in TypeScript.
 Can replace Kong for basic purposes.
 ## Run the server
 
