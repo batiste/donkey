@@ -1,0 +1,19 @@
+{
+  "name": "donkey",
+  "version": "1.0.0",
+  "description": "Replace Kong",
+  "main": "donkey.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc",
+    "serve": "npm run tsc && node out/donkey.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "~4.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "~15.12.4"
+  }
+}
