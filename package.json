@@ -8,7 +8,7 @@
     "tsc": "tsc",
     "serve": "npm run tsc && node out/donkey.js"
   },
-  "author": "",
+  "author": "batiste.bieler@gmail.com",
   "license": "ISC",
   "dependencies": {
     "typescript": "~4.3.4"
