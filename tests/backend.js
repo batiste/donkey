@@ -7,11 +7,12 @@ const port = 8000;
 
 const requestListener = function (req, res) {
   console.log('request')
-  setTimeout(() => {
-    res.setHeader("Content-Type", "application/json");
-    res.writeHead(200);
-    res.end(`{"message": "This is a JSON response"}`);
-  }, 0)
+  res.setHeader("Content-Type", "application/json");
+  res.writeHead(200);
+  res.end(`{"message": "This is a JSON response"}`);
+  // setTimeout(() => {
+
+  // }, 200)
 };
 
 const server = http.createServer(requestListener);

@@ -41,17 +41,17 @@ scenarios:
 Backend with 0ms latency
 
 ```yaml
-Summary report @ 10:13:13(+0200) 2021-06-24
+Summary report @ 10:16:08(+0200) 2021-06-24
   Scenarios launched:  6000
   Scenarios completed: 6000
   Requests completed:  6000
   Mean response/sec: 99.16
   Response time (msec):
-    min: 1
-    max: 85
-    median: 3
-    p95: 3
-    p99: 4.5
+    min: 0
+    max: 52
+    median: 1
+    p95: 2
+    p99: 3
   Scenario counts:
     0: 6000 (100%)
   Codes:
