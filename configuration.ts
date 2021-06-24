@@ -14,6 +14,12 @@ export const globalMiddlewares = [
 ]
 
 export const matchers: IMatcher[] = [
+  {
+    host: 'loadtest',
+    upstream: 'localhost',
+    port: 8000,
+    timeout: 3
+  },
   // basic auth
   {
     host: 'localhost:3000',

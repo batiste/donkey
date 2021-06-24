@@ -12,6 +12,7 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
   var matcher = match(clientRequest)
 
   if (!matcher) {
+    console.log('no matches')
     clientResponse.writeHead(503)
     clientResponse.end('No match on gateway')
     return
@@ -29,10 +30,31 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
   var req = http.request(options, function (res) {
     modifyResponseHeaders(res.headers)
     clientResponse.writeHead(res.statusCode || 200, res.headers)
-    res.pipe(clientResponse, {
-      end: true
-    });
+    // res.pipe(clientResponse, {
+    //   end: true
+    // });
+
+    res.on('data', (chunk) => {
+      clientResponse.write(chunk)
+    })
+    
+    res.on('end', () => {
+      clientResponse.end()
+    })
+
   });
+
+  // clientRequest.pipe(req, {
+  //   end: true
+  // });
+
+  clientRequest.on('data', (chunk) => {
+    req.write(chunk)
+  })
+  
+  clientRequest.on('end', () => {
+    req.end()
+  })
 
   req.on('error', (error) => {
     console.error(error)
@@ -41,21 +63,19 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
     } catch(e) {
       console.warn('Header already sent! -e')
     }
-    clientResponse.end('Gateway error')
+    clientResponse.write('Gateway error')
   });
 
   req.on('timeout', () => {
+    console.warn('timeout')
     try {
       clientResponse.writeHead(503)
     } catch(e) {
       console.warn('Header already sent! -t')
     }
-    clientResponse.end('Gateway timeout')
+    clientResponse.write('Gateway timeout')
   });
 
-  clientRequest.pipe(req, {
-    end: true
-  });
 }
 
 const PORT = 3000

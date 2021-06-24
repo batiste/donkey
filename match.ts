@@ -11,6 +11,7 @@ function matchUris(uris: string[], url: string) {
 }
 
 export function match(clientRequest: http.IncomingMessage): config.IMatcher | undefined {
+  console.log(clientRequest.headers.host)
   for(let i=0; i < config.matchers.length; i++) {
     const matcher = config.matchers[i]
     if (matcher.host && clientRequest.headers.host != matcher.host) {
