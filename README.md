@@ -22,13 +22,13 @@ npm run serve
 
 ## Performance and scalability
 
-Load test with artillery
+Load test with artillery, core usage ~15%
 
 ```yaml
 config:
   target: "http://localhost:3000"
   phases:
-    - duration: 20
+    - duration: 60
       arrivalRate: 100
 scenarios:
   - flow:
@@ -41,20 +41,20 @@ scenarios:
 Output
 
 ```yaml
-Summary report @ 09:50:20(+0200) 2021-06-24
-  Scenarios launched:  2000
-  Scenarios completed: 2000
-  Requests completed:  2000
-  Mean response/sec: 97.61
+Summary report @ 09:59:18(+0200) 2021-06-24
+  Scenarios launched:  6000
+  Scenarios completed: 6000
+  Requests completed:  6000
+  Mean response/sec: 99.16
   Response time (msec):
-    min: 1
-    max: 342
-    median: 3
-    p95: 13.5
-    p99: 169
+    min: 0
+    max: 1086
+    median: 2
+    p95: 9
+    p99: 788
   Scenario counts:
-    0: 2000 (100%)
+    0: 6000 (100%)
   Codes:
-    200: 2000
+    200: 6000
 ```
 
