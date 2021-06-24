@@ -38,7 +38,7 @@ scenarios:
             host: loadtest
 ```
 
-Output
+Backend with 0ms latency
 
 ```yaml
 Summary report @ 10:01:41(+0200) 2021-06-24
@@ -57,4 +57,25 @@ Summary report @ 10:01:41(+0200) 2021-06-24
   Codes:
     200: 6000
 ```
+
+Backend with 200ms latency
+
+```yaml
+Summary report @ 10:05:15(+0200) 2021-06-24
+  Scenarios launched:  6000
+  Scenarios completed: 6000
+  Requests completed:  6000
+  Mean response/sec: 99.16
+  Response time (msec):
+    min: 200
+    max: 1224
+    median: 202
+    p95: 833
+    p99: 1133
+  Scenario counts:
+    0: 6000 (100%)
+  Codes:
+    200: 6000
+```
+
 
