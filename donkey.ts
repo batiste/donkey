@@ -30,31 +30,14 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
   var req = http.request(options, function (res) {
     modifyResponseHeaders(res.headers)
     clientResponse.writeHead(res.statusCode || 200, res.headers)
-    // res.pipe(clientResponse, {
-    //   end: true
-    // });
-
-    res.on('data', (chunk) => {
-      clientResponse.write(chunk)
-    })
-    
-    res.on('end', () => {
-      clientResponse.end()
-    })
-
+    res.pipe(clientResponse, {
+      end: true
+    });
   });
 
-  // clientRequest.pipe(req, {
-  //   end: true
-  // });
-
-  clientRequest.on('data', (chunk) => {
-    req.write(chunk)
-  })
-  
-  clientRequest.on('end', () => {
-    req.end()
-  })
+  clientRequest.pipe(req, {
+    end: true
+  });
 
   req.on('error', (error) => {
     console.error(error)
@@ -63,7 +46,7 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
     } catch(e) {
       console.warn('Header already sent! -e')
     }
-    clientResponse.write('Gateway error')
+    clientResponse.end('Gateway error')
   });
 
   req.on('timeout', () => {
@@ -73,9 +56,8 @@ function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.Ser
     } catch(e) {
       console.warn('Header already sent! -t')
     }
-    clientResponse.write('Gateway timeout')
+    clientResponse.end('Gateway timeout')
   });
-
 }
 
 const PORT = 3000
