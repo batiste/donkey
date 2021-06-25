@@ -14,7 +14,7 @@ npm run serve
 APIs configuration in Donkey works with a list of conditional IMatcher.
 Each IMatcher is taken in order and the host and uris are tested with the current incoming request.
 If the provided fields match the IMatcher is used for this request.
-If fields are provided the IMatcher is always used.
+If no fields are provided the IMatcher is always used.
 
 ```ts
 import { basicAuthMiddleware } from './middlewares/basicAuth';
