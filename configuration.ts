@@ -17,7 +17,6 @@ export function getConfig(): Config {
       upstream: 'example.com',
       uris: ['/admin/'],
       middleware: basicAuthMiddleware,
-      timeout: 2
     },
     // basic
     {
