@@ -12,14 +12,19 @@ program
 program.parse();
 const options = program.opts();
 
-const configModule = options.config || './configuration'
-const config: Config = import(configModule) as any
-
-const port = options.port || 3000
-
-if(options.run) {
-  const gateway = createGateway(config, port)
+async function start() {
+  const configModule = options.config || './configuration'
+  const config: Config = (await import(configModule)).getConfig()
+  
+  const port = options.port || 3000
+  
+  if(options.run) {
+    const gateway = createGateway(config, port)
+  }  
 }
+
+start()
+
 
 
 

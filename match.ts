@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { IMatcher } from './schema';
+import { Config, IMatcher } from './schema';
 
 const defaut_timeout = 30
 
@@ -24,7 +24,10 @@ export function match(matchers: IMatcher[], clientRequest: http.IncomingMessage)
   return 
 }
 
-export function matcherToOptions(clientRequest: http.IncomingMessage, matcher: IMatcher) : http.RequestOptions {
+export function matcherToOptions(
+    clientRequest: http.IncomingMessage,
+    matcher: IMatcher,
+    config: Config) : http.RequestOptions {
   return {
     host: matcher.upstream,
     port: matcher.port || 80,
@@ -32,6 +35,6 @@ export function matcherToOptions(clientRequest: http.IncomingMessage, matcher: I
     protocol: matcher.protocol || 'http:',
     method: clientRequest.method,
     headers: clientRequest.headers,
-    timeout: (matcher.timeout || defaut_timeout) * 1000,
+    timeout: (matcher.timeout || config.defaultTimeout || 30) * 1000,
   };
 }

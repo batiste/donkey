@@ -11,4 +11,5 @@ export interface IMatcher {
 
 export interface Config {
   matchers: IMatcher[]
+  defaultTimeout?: number
 }

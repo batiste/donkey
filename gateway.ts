@@ -16,9 +16,9 @@ export function createGateway(config: Config, port: number): http.Server {
     var matcher = match(config.matchers, clientRequest)
 
     if (!matcher) {
-      logger.log('no matches')
+      logger.warn(`No matches for ${clientRequest.headers.host}, ${clientRequest.url}`)
       clientResponse.writeHead(503)
-      clientResponse.end('No match on gateway, 🐴 kicked you out')
+      clientResponse.end('No match on gateway, 🐴 will not move')
       return
     }
 
@@ -26,7 +26,7 @@ export function createGateway(config: Config, port: number): http.Server {
       return
     }
 
-    const options = matcherToOptions(clientRequest, matcher)
+    const options = matcherToOptions(clientRequest, matcher, config)
 
     removeHeaders(clientRequest, clientResponse)
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
