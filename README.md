@@ -1,4 +1,4 @@
-# Donkey, an API gateway in less than 500 lines of code
+# Donkey is an Opiniated API Gateway
 
 A configuration based gateway with minimal features written in TypeScript.
 Can replace Kong for basic purposes.
