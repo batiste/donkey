@@ -9,7 +9,7 @@ function modifyResponseHeaders(headers: http.IncomingHttpHeaders) {
   headers['access-control-allow-origin'] = 'https://example.com'
 }
 
-export function createGateway( config: Config): http.Server {
+export function createGateway(config: Config, port: number): http.Server {
 
   function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
@@ -18,7 +18,7 @@ export function createGateway( config: Config): http.Server {
     if (!matcher) {
       logger.log('no matches')
       clientResponse.writeHead(503)
-      clientResponse.end('No match on gateway')
+      clientResponse.end('No match on gateway, 🐴 kicked you out')
       return
     }
 
@@ -64,16 +64,12 @@ export function createGateway( config: Config): http.Server {
     });
   }
 
-  const PORT = 3000
-  logger.log(`Starting Donkey Gateway on http://localhost:${PORT}`)
-
-
+  logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`)
 
   process.on('uncaughtException', (err: any, origin: any) => {
     logger.error(err, origin)
   });
 
-  return http.createServer(onRequest).listen(PORT);
-
+  return http.createServer(onRequest).listen(port);
 }
 
