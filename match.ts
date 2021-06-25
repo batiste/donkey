@@ -1,5 +1,5 @@
 import * as http from 'http';
-import * as config from './configuration'
+import { IMatcher } from './schema';
 
 const defaut_timeout = 30
 
@@ -10,10 +10,9 @@ function matchUris(uris: string[], url: string) {
   return false
 }
 
-export function match(clientRequest: http.IncomingMessage): config.IMatcher | undefined {
-  console.log(clientRequest.headers.host)
-  for(let i=0; i < config.matchers.length; i++) {
-    const matcher = config.matchers[i]
+export function match(matchers: IMatcher[], clientRequest: http.IncomingMessage): IMatcher | undefined {
+  for(let i=0; i < matchers.length; i++) {
+    const matcher = matchers[i]
     if (matcher.host && clientRequest.headers.host != matcher.host) {
       continue
     }
@@ -25,7 +24,7 @@ export function match(clientRequest: http.IncomingMessage): config.IMatcher | un
   return 
 }
 
-export function matcherToOptions(clientRequest: http.IncomingMessage, matcher: config.IMatcher) : http.RequestOptions {
+export function matcherToOptions(clientRequest: http.IncomingMessage, matcher: IMatcher) : http.RequestOptions {
   return {
     host: matcher.upstream,
     port: matcher.port || 80,

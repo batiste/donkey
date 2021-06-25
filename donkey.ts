@@ -1,69 +1,22 @@
-import * as http from 'http';
-import { match, matcherToOptions } from './match';
-import { removeHeaders } from './middlewares/removeHeaders';
+import { Command } from 'commander';
+import { createGateway } from './gateway'
+import { Config } from './schema';
 
-function modifyResponseHeaders(headers: http.IncomingHttpHeaders) {
-  headers['access-control-allow-credentials'] = 'true'
-  headers['access-control-allow-origin'] = 'https://example.com'
+const program = new Command();
+
+program
+  .option('-r, --run', 'Run the gateway')
+  .option('-c, --config', 'JavaScript configuration file to be imported')
+
+program.parse();
+const options = program.opts();
+
+const configModule = options.config || './configuration'
+const config: Config = import(configModule) as any
+
+if(options.run) {
+  const gateway = createGateway(config)
 }
 
-function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
-  var matcher = match(clientRequest)
 
-  if (!matcher) {
-    console.log('no matches')
-    clientResponse.writeHead(503)
-    clientResponse.end('No match on gateway')
-    return
-  }
-
-  if (matcher.middleware && matcher.middleware(clientRequest, clientResponse)) {
-    return
-  }
-
-  const options = matcherToOptions(clientRequest, matcher)
-
-  removeHeaders(clientRequest, clientResponse)
-  console.log(options)
-
-  var req = http.request(options, function (res) {
-    modifyResponseHeaders(res.headers)
-    clientResponse.writeHead(res.statusCode || 200, res.headers)
-    res.pipe(clientResponse, {
-      end: true
-    });
-  });
-
-  clientRequest.pipe(req, {
-    end: true
-  });
-
-  req.on('error', (error) => {
-    console.error(error)
-    try {
-      clientResponse.writeHead(503)
-    } catch(e) {
-      console.warn('Header already sent! -e')
-    }
-    clientResponse.end('Gateway error')
-  });
-
-  req.on('timeout', () => {
-    console.warn('timeout')
-    try {
-      clientResponse.writeHead(503)
-    } catch(e) {
-      console.warn('Header already sent! -t')
-    }
-    clientResponse.end('Gateway timeout')
-  });
-}
-
-const PORT = 3000
-console.log(`Starting Donkey Gateway on http://localhost:${PORT}`)
-const server = http.createServer(onRequest).listen(PORT);
-
-process.on('uncaughtException', (err: any, origin: any) => {
-  console.error(err, origin)
-});

@@ -1,19 +1,12 @@
 import { basicAuthMiddleware } from './middlewares/basicAuth';
+import { IMatcher } from './schema';
 
-export interface IMatcher {
-  upstream: string
-  port?: number
-  host?: string
-  uris?: string[]
-  protocol?: string
-  timeout?: number
-  middleware?: Function
-}
 
 export const globalMiddlewares = [
 ]
 
 export const matchers: IMatcher[] = [
+  // load test config
   {
     host: 'loadtest',
     upstream: 'localhost',
