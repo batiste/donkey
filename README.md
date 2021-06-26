@@ -12,9 +12,9 @@ npm run serve
 ## Configuration
 
 APIs configuration in Donkey works with a list of conditional IMatcher.
-Each IMatcher is taken in order and the host and uris are tested with the current incoming request.
-If the provided fields match the IMatcher is used for this request.
-If no fields are provided the IMatcher is always used.
+Each IMatcher is taken in order and the `host` and `uris` fields are tested with the current incoming request.
+The IMatcher is used for this request if the provided fields match.
+If no fields are present the IMatcher is always used.
 
 ```ts
 import { basicAuthMiddleware } from './middlewares/basicAuth';
@@ -33,6 +33,7 @@ export function getConfig(): Config {
     {
       host: 'localhost',
       upstream: 'example.com',
+      // at least one uris should match. The match is done with startsWith
       uris: ['/admin/'],
       middleware: basicAuthMiddleware,
     },
