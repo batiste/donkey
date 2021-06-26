@@ -1,4 +1,5 @@
 import { createBasicAuthMiddleware } from './middlewares/basicAuth';
+import { createCorsMiddleware } from './middlewares/cors';
 import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
 import { Config, IMatcher } from './schema';
 
@@ -26,6 +27,7 @@ export function getConfig(): Config {
     {
       host: 'localhost:3000',
       upstream: 'example.com',
+      responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test
     {

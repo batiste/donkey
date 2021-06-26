@@ -31,19 +31,23 @@ export function createGateway(config: Config, port: number): http.Server {
 
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
 
-    const req = http.request(options, function (res) {
-      modifyResponseHeaders(res.headers)
-      clientResponse.writeHead(res.statusCode || 200, res.headers)
-      res.pipe(clientResponse, {
+    const upstreamRequest= http.request(options, function (upstreamResponse) {
+      if (matcher.responseMiddlewares) {
+        for(let i=0; i < matcher.responseMiddlewares.length; i++) {
+          matcher.responseMiddlewares[i](upstreamResponse)
+        }
+      }
+      clientResponse.writeHead(upstreamResponse.statusCode || 200, upstreamResponse.headers)
+      upstreamResponse.pipe(clientResponse, {
         end: true
       });
     });
 
-    clientRequest.pipe(req, {
+    clientRequest.pipe(upstreamRequest, {
       end: true
     });
 
-    req.on('error', (error) => {
+    upstreamRequest.on('error', (error) => {
       logger.error(error)
       try {
         clientResponse.writeHead(503)
@@ -53,7 +57,7 @@ export function createGateway(config: Config, port: number): http.Server {
       clientResponse.end('Gateway error')
     });
 
-    req.on('timeout', () => {
+    upstreamRequest.on('timeout', () => {
       logger.warn(`Timeout on upstream ${matcher?.upstream}`)
       try {
         clientResponse.writeHead(503)

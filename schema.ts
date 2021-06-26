@@ -7,6 +7,7 @@ export interface IMatcher {
   protocol?: string
   timeout?: number
   requestMiddlewares?: RequestMiddleware[]
+  responseMiddlewares?: ResponseMiddleware[]
 }
 
 export interface Config {
@@ -15,3 +16,7 @@ export interface Config {
 }
 
 export type RequestMiddleware = (clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) => boolean
+
+export type ResponseMiddleware = (upstreamResponse: http.IncomingMessage) => void
+
+
