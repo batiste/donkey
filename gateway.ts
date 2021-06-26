@@ -3,10 +3,6 @@ import { logger } from './logs';
 import { match, matcherToOptions } from './match';
 import { Config } from './schema';
 
-function modifyResponseHeaders(headers: http.IncomingHttpHeaders) {
-  headers['access-control-allow-credentials'] = 'true'
-  headers['access-control-allow-origin'] = 'https://example.com'
-}
 
 export function createGateway(config: Config, port: number): http.Server {
 
