@@ -1,7 +1,6 @@
 import * as http from 'http';
 import { logger } from './logs';
 import { match, matcherToOptions } from './match';
-import { removeHeaders } from './middlewares/removeHeaders';
 import { Config } from './schema';
 
 function modifyResponseHeaders(headers: http.IncomingHttpHeaders) {
@@ -13,7 +12,7 @@ export function createGateway(config: Config, port: number): http.Server {
 
   function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
-    var matcher = match(config.matchers, clientRequest)
+    const matcher = match(config.matchers, clientRequest)
 
     if (!matcher) {
       logger.warn(`No matches for ${clientRequest.headers.host}, ${clientRequest.url}`)
@@ -22,16 +21,17 @@ export function createGateway(config: Config, port: number): http.Server {
       return
     }
 
-    if (matcher.middleware && matcher.middleware(clientRequest, clientResponse)) {
-      return
+    if (matcher.requestMiddlewares) {
+      for(let i=0; i < matcher.requestMiddlewares.length; i++) {
+        if (matcher.requestMiddlewares[i](clientRequest, clientResponse)) { return }
+      }
     }
 
     const options = matcherToOptions(clientRequest, matcher, config)
 
-    removeHeaders(clientRequest, clientResponse)
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
 
-    var req = http.request(options, function (res) {
+    const req = http.request(options, function (res) {
       modifyResponseHeaders(res.headers)
       clientResponse.writeHead(res.statusCode || 200, res.headers)
       res.pipe(clientResponse, {

@@ -1,4 +1,4 @@
-
+import * as http from 'http';
 export interface IMatcher {
   upstream: string
   port?: number
@@ -6,10 +6,12 @@ export interface IMatcher {
   uris?: string[]
   protocol?: string
   timeout?: number
-  middleware?: Function
+  requestMiddlewares?: RequestMiddleware[]
 }
 
 export interface Config {
   matchers: IMatcher[]
   defaultTimeout?: number
 }
+
+export type RequestMiddleware = (clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) => boolean

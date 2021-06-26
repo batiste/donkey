@@ -1,10 +1,11 @@
 import * as http from 'http';
+import { RequestMiddleware } from '../schema';
 
-export const headersToRemove = ['x-authenticated-scope', 'x-consumer-custom-id', 
-  'x-authenticated-userid', 'x-anonymous-consumer',
-  'x-consumer-id', 'x-consumer-username']
-
-export function removeHeaders(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
-  const headers = clientRequest.headers
-  headersToRemove.forEach(h => delete headers[h])
+export function createRemoveHeadersMiddleware(headersToRemove: string[]): RequestMiddleware {
+  return function removeHeadersMiddleware(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
+    const headers = clientRequest.headers
+    headersToRemove.forEach(h => delete headers[h])
+    return false
+  }
 }
+

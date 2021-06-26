@@ -1,7 +1,10 @@
-import { basicAuthMiddleware } from './middlewares/basicAuth';
+import { createBasicAuthMiddleware } from './middlewares/basicAuth';
+import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
 import { Config, IMatcher } from './schema';
 
 export function getConfig(): Config {
+
+  const headersToRemove = ['x-authenticated-scope', 'x-consumer-username']
 
   const matchers: IMatcher[] = [
     // load test config
@@ -9,14 +12,15 @@ export function getConfig(): Config {
       host: 'loadtest',
       upstream: 'localhost',
       port: 8000,
-      timeout: 3
+      timeout: 3,
+      requestMiddlewares: [createRemoveHeadersMiddleware(headersToRemove)]
     },
     // basic auth
     {
       host: 'localhost:3000',
       upstream: 'example.com',
       uris: ['/admin/'],
-      middleware: basicAuthMiddleware,
+      requestMiddlewares: [createBasicAuthMiddleware('admin', '1234')],
     },
     // basic
     {
