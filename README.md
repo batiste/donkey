@@ -17,7 +17,7 @@ The IMatcher is used for this request if the provided fields match.
 If no fields are present the IMatcher is always used.
 
 ```ts
-import { basicAuthMiddleware } from './middlewares/basicAuth';
+import { createBasicAuthMiddleware } from './middlewares/basicAuth';
 import { Config, IMatcher } from './schema';
 
 export function getConfig(): Config {
@@ -35,7 +35,7 @@ export function getConfig(): Config {
       upstream: 'example.com',
       // at least one uris should match. The match is done with startsWith
       uris: ['/admin/'],
-      middleware: basicAuthMiddleware,
+      requestMiddlewares: [createBasicAuthMiddleware('admin', '1234')],
     },
     // match any leftover requests
     {
