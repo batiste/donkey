@@ -49,13 +49,12 @@ export function getConfig(): Config {
 ## Implemented
 
   * APIs gateway
-  * cors headers
-  * Request transformer (removing certain headers, such as OAuth2 scopes headers)
-  * Basic auth middleware
+  * CORS headers middleware
+  * Remove headers middleware
+  * Basic Auth middleware
 ## Missing features
 
   * Authentication middlewares?
-
 
 ## Performance and scalability
 
