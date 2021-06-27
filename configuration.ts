@@ -27,6 +27,8 @@ export function getConfig(): Config {
     {
       host: 'localhost:3000',
       upstream: 'example.com',
+      protocol: 'https:',
+      port: 443,
       responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test

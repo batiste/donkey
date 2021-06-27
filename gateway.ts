@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as https from 'https';
 import { logger } from './logs';
 import { match, matcherToOptions } from './match';
 import { Config } from './schema';
@@ -27,7 +28,9 @@ export function createGateway(config: Config, port: number): http.Server {
 
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
 
-    const upstreamRequest= http.request(options, function (upstreamResponse) {
+    const requestFct = options.protocol === 'https:' ? https.request : http.request
+
+    const upstreamRequest= requestFct(options, function (upstreamResponse) {
       if (matcher.responseMiddlewares) {
         for(let i=0; i < matcher.responseMiddlewares.length; i++) {
           matcher.responseMiddlewares[i](upstreamResponse)
