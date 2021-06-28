@@ -8,15 +8,31 @@ export interface IMatcher {
    * Port to use on the upstream, default is 80
    */
   port?: number
-  hosts?: string[]
-  uris?: string[]
-  protocol?: string
   /**
-   * Timeout when the gateway give up the upstream
+   * List of hosts to check
+   */
+  hosts?: string[]
+  /**
+   * List of uris to match. String.startsWith is used
+   */
+  uris?: string[]
+  protocol?: 'http:' | 'https:'
+  /**
+   * Global timeout when the gateway give up on the upstream
    */
   timeout?: number
+  /**
+   * All middleware to apply on the outer request/response
+   */
   requestMiddlewares?: RequestMiddleware[]
+  /**
+   * All middleware to apply on the upstream response
+   */
   responseMiddlewares?: ResponseMiddleware[]
+  /**
+   * Preserve the original host from the client
+   */
+  preserveHost?: boolean
 }
 
 export interface Config {

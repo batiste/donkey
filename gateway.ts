@@ -28,8 +28,10 @@ export function createGateway(config: Config, port: number): http.Server {
 
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
 
-    clientRequest.headers['origin'] = matcher?.upstream
-    clientRequest.headers['host'] = matcher?.upstream
+    // clientRequest.headers['origin'] = matcher?.upstream
+    if (!matcher.preserveHost) {
+      clientRequest.headers['host'] = matcher?.upstream
+    }
 
     const requestFct = options.protocol === 'https:' ? https.request : http.request
 

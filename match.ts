@@ -1,8 +1,6 @@
 import * as http from 'http';
 import { Config, IMatcher } from './schema';
 
-const defaut_timeout = 30
-
 function matchUris(uris: string[], url: string) {
   for(let i=0; i < uris.length; i++) {
     if(url.startsWith(uris[i])) { return true }
