@@ -22,6 +22,7 @@ export function getConfig(): Config {
       upstream: 'example.com',
       uris: ['/admin/'],
       requestMiddlewares: [createBasicAuthMiddleware('admin', '1234')],
+      stripUri: true,
     },
     // basic
     {

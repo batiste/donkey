@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as https from 'https';
 import { logger } from './logs';
-import { match, matcherToOptions } from './match';
+import { matchRequest, matcherToOptions } from './match';
 import { Config } from './schema';
 
 
@@ -9,14 +9,16 @@ export function createGateway(config: Config, port: number): http.Server {
 
   function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
-    const matcher = match(config.matchers, clientRequest)
+    const match = matchRequest(config.matchers, clientRequest)
 
-    if (!matcher) {
-      logger.warn(`No matches for ${clientRequest.headers.host}, ${clientRequest.url}`)
+    if (!match) {
+      logger.warn(`No match found for ${clientRequest.headers.host}, ${clientRequest.url}`)
       clientResponse.writeHead(503)
       clientResponse.end('No match on gateway, 🐴 will not move')
       return
     }
+
+    const matcher = match.matcher
 
     if (matcher.requestMiddlewares) {
       for(let i=0; i < matcher.requestMiddlewares.length; i++) {
@@ -24,7 +26,7 @@ export function createGateway(config: Config, port: number): http.Server {
       }
     }
 
-    const options = matcherToOptions(clientRequest, matcher, config)
+    const options = matcherToOptions(clientRequest, match, config)
 
     logger.log(`Match found for host:${clientRequest.headers.host}`, options)
 

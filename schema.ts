@@ -33,6 +33,20 @@ export interface IMatcher {
    * Preserve the original host from the client
    */
   preserveHost?: boolean
+  /**
+   * Remove the matched uri before passing the request
+   */
+  stripUri?: boolean
+}
+
+export interface IMatcherCriteria {
+  host?: string
+  uri?: string
+}
+
+export interface IMatch {
+  matcher: IMatcher,
+  criteria: IMatcherCriteria 
 }
 
 export interface Config {
