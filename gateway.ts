@@ -50,20 +50,20 @@ export function createGateway(config: Config, port: number): http.Server {
       logger.error(error)
       try {
         clientResponse.writeHead(503)
+        clientResponse.end('Gateway error')
       } catch(e) {
-        logger.warn('Header already sent! -e')
+        logger.warn('Headers already sent in error handler', e)
       }
-      clientResponse.end('Gateway error')
     });
 
     upstreamRequest.on('timeout', () => {
       logger.warn(`Timeout on upstream ${matcher?.upstream}`)
       try {
         clientResponse.writeHead(503)
+        clientResponse.end('Gateway timeout')
       } catch(e) {
-        logger.warn('Header already sent! -t')
+        logger.warn('Headers already sent in timeout handler', e)
       }
-      clientResponse.end('Gateway timeout')
     });
   }
 
