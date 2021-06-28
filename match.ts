@@ -13,7 +13,7 @@ function matchUris(uris: string[], url: string) {
 export function match(matchers: IMatcher[], clientRequest: http.IncomingMessage): IMatcher | undefined {
   for(let i=0; i < matchers.length; i++) {
     const matcher = matchers[i]
-    if (matcher.host && clientRequest.headers.host != matcher.host) {
+    if (matcher.hosts && !matcher.hosts.includes(clientRequest.headers.host as string)) {
       continue
     }
     if (matcher.uris && !matchUris(matcher.uris, clientRequest.url as string)) {

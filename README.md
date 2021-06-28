@@ -12,7 +12,7 @@ npm run serve
 ## Configuration
 
 APIs configuration in Donkey works with a list of conditional IMatcher.
-Each IMatcher is taken in order and the `host` and `uris` fields are tested with the current incoming request.
+Each IMatcher is taken in order and the `hosts` and `uris` fields are tested with the current incoming request.
 The IMatcher is used for this request if the provided fields match.
 If no fields are present the IMatcher is always used.
 
@@ -24,14 +24,14 @@ export function getConfig(): Config {
   const matchers: IMatcher[] = [
     // match the HTTP header Host: loadtest
     {
-      host: 'loadtest',
+      hosts: ['loadtest'],
       upstream: 'localhost',
       port: 8000,
       timeout: 3
     },
     // match HTTP header Host: localhost and the /admin/ uri
     {
-      host: 'localhost',
+      hosts: ['localhost'],
       upstream: 'example.com',
       // at least one uris should match. The match is done with startsWith
       uris: ['/admin/'],

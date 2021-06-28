@@ -8,7 +8,7 @@ export interface IMatcher {
    * Port to use on the upstream, default is 80
    */
   port?: number
-  host?: string
+  hosts?: string[]
   uris?: string[]
   protocol?: string
   /**

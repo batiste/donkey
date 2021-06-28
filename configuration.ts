@@ -10,7 +10,7 @@ export function getConfig(): Config {
   const matchers: IMatcher[] = [
     // load test config
     {
-      host: 'loadtest',
+      hosts: ['loadtest'],
       upstream: 'localhost',
       port: 8000,
       timeout: 3,
@@ -18,14 +18,14 @@ export function getConfig(): Config {
     },
     // basic auth
     {
-      host: 'localhost:3000',
+      hosts: ['localhost:3000'],
       upstream: 'example.com',
       uris: ['/admin/'],
       requestMiddlewares: [createBasicAuthMiddleware('admin', '1234')],
     },
     // basic
     {
-      host: 'localhost:3000',
+      hosts: ['localhost:3000'],
       upstream: 'example.com',
       protocol: 'https:',
       port: 443,
@@ -33,12 +33,12 @@ export function getConfig(): Config {
     },
     // test
     {
-      host: 'example.com',
+      hosts: ['example.com'],
       upstream: 'example.com',
       timeout: 2
     },
     {
-      host: 'thing.google',
+      hosts: ['thing.google'],
       upstream: 'about.google',
       uris: ['/products/', '/commitments/'],
       timeout: 3
