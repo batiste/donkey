@@ -11,6 +11,12 @@ npm run serve
 
 Or
 
+```
+docker compose up donkey
+```
+
+Or
+
 ```bash
 docker build . -t donkey
 docker run -p 3000:3000 donkey

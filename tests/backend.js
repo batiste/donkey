@@ -6,7 +6,7 @@ const host = 'localhost';
 const port = 8000;
 
 const requestListener = function (req, res) {
-  console.log('request')
+  console.log('Request on backend')
   res.setHeader("Content-Type", "application/json");
   res.writeHead(200);
   res.end(`{"message": "This is a JSON response"}`);
@@ -16,7 +16,7 @@ const requestListener = function (req, res) {
 };
 
 const server = http.createServer(requestListener);
-server.listen(port, host, () => {
+server.listen(port, () => {
     console.log(`Backend is running on http://${host}:${port}`);
 });
 

@@ -1,0 +1,13 @@
+services:
+
+  backend:
+    build: tests/.
+    ports:
+      - "8000:8000"
+
+  donkey:
+    depends_on:
+      - backend
+    build: .
+    ports:
+      - "3000:3000"

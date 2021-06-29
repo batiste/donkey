@@ -11,7 +11,7 @@ export function getConfig(): Config {
     // load test config
     {
       hosts: ['loadtest'],
-      upstream: 'localhost',
+      upstream: 'backend',
       port: 8000,
       timeout: 3,
       requestMiddlewares: [createRemoveHeadersMiddleware(headersToRemove)]
