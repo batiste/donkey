@@ -16,13 +16,16 @@ export interface IMatcher {
    * List of uris to match. String.startsWith is used
    */
   uris?: string[]
+  /**
+   * Protocol to use on the upstream. Default http
+   */
   protocol?: 'http:' | 'https:'
   /**
-   * Global timeout when the gateway give up on the upstream
+   * Timeout when the gateway give up on the upstream
    */
   timeout?: number
   /**
-   * All middleware to apply on the outer request/response
+   * All middleware to apply on the client request or response
    */
   requestMiddlewares?: RequestMiddleware[]
   /**
@@ -34,7 +37,7 @@ export interface IMatcher {
    */
   preserveHost?: boolean
   /**
-   * Remove the matched uri before passing the request
+   * Remove the matched uri from the rest of the uri
    */
   stripUri?: boolean
 }
