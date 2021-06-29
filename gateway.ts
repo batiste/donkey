@@ -28,9 +28,8 @@ export function createGateway(config: Config, port: number): http.Server {
 
     const options = matcherToOptions(clientRequest, match, config)
 
-    logger.log(`Match found for host:${clientRequest.headers.host}`, options)
+    logger.log('Match found', { options, match, host: clientRequest.headers.host, url: clientRequest.url })
 
-    // clientRequest.headers['origin'] = matcher?.upstream
     if (!matcher.preserveHost) {
       clientRequest.headers['host'] = matcher?.upstream
     }
@@ -54,7 +53,7 @@ export function createGateway(config: Config, port: number): http.Server {
     });
 
     upstreamRequest.on('error', (error) => {
-      logger.error(error)
+      logger.error('Error on request', { error, match })
       try {
         clientResponse.writeHead(503)
         clientResponse.end('Gateway error')
@@ -64,7 +63,7 @@ export function createGateway(config: Config, port: number): http.Server {
     });
 
     upstreamRequest.on('timeout', () => {
-      logger.warn(`Timeout on upstream ${matcher?.upstream}`)
+      logger.warn(`Timeout on upstream ${matcher?.upstream}`, { match })
       try {
         clientResponse.writeHead(503)
         clientResponse.end('Gateway timeout')
@@ -77,7 +76,7 @@ export function createGateway(config: Config, port: number): http.Server {
   logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`)
 
   process.on('uncaughtException', (err: any, origin: any) => {
-    logger.error(err, origin)
+    logger.error('Uncaught Exception', { err: err, origin })
   });
 
   return http.createServer(onRequest).listen(port);

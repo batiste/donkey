@@ -9,6 +9,13 @@ npm install
 npm run serve
 ```
 
+Or
+
+```bash
+docker build . -t donkey
+docker run -p 3000:3000 donkey
+```
+
 ## Configuration
 
 APIs configuration in Donkey works with a list of conditional IMatcher.

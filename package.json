@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
-    "serve": "npm run tsc && node build/donkey.js --run"
+    "serve": "npm run tsc && UV_THREADPOOL_SIZE=8 node build/donkey.js --run",
+    "backend": "node tests/backend.js"
   },
   "author": "batiste.bieler@gmail.com",
   "license": "ISC",
