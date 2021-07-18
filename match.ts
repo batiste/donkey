@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { Config, IMatch, IMatcher, IMatcherCriteria } from './schema';
+import { Config, IMatch, IMatcher, IMatcherCriteria, Request } from './schema';
 
 function matchUris(uris: string[], url: string): string | false {
   for(let i=0; i < uris.length; i++) {
@@ -8,7 +8,7 @@ function matchUris(uris: string[], url: string): string | false {
   return false
 }
 
-export function matchRequest(matchers: IMatcher[], clientRequest: http.IncomingMessage): IMatch | undefined {
+export function matchRequest(matchers: IMatcher[], clientRequest: Request): IMatch | undefined {
   for(let i=0; i < matchers.length; i++) {
     const matcher = matchers[i]
     const criteria: IMatcherCriteria = {}

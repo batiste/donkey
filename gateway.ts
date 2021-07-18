@@ -2,12 +2,12 @@ import * as http from 'http';
 import * as https from 'https';
 import { logger } from './logs';
 import { matchRequest, matcherToOptions } from './match';
-import { Config } from './schema';
+import { Config, Request } from './schema';
 
 
 export function createGateway(config: Config, port: number): http.Server {
 
-  async function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
+  async function onRequest(clientRequest: Request, clientResponse: http.ServerResponse) {
 
     const match = matchRequest(config.matchers, clientRequest)
 
@@ -80,6 +80,6 @@ export function createGateway(config: Config, port: number): http.Server {
     logger.error('Uncaught Exception', { err: err, origin })
   });
 
-  return http.createServer(onRequest).listen(port);
+  return http.createServer(onRequest as any).listen(port);
 }
 

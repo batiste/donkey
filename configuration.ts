@@ -1,27 +1,55 @@
+import got from 'got/dist/source';
 import { createBasicAuthMiddleware } from './middlewares/basicAuth';
 import { createCorsMiddleware } from './middlewares/cors';
 import { createRateLimitationMiddleware } from './middlewares/rateLimit';
 import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
+import { createMetadataMiddleware } from './middlewares/metadata';
 import { Config, IMatcher } from './schema';
+
+
+interface IMetaData {
+  uuid: string
+  scopes: string
+  rateLimitationBy: {second: number, minute: number, hour: number},
+  orgRateLimitationBy: {second: number, minute: number, hour: number}
+}
+
 
 export function getConfig(): Config {
 
   const headersToRemove = ['x-authenticated-scope', 'x-consumer-username']
+  const env = process.env.ENV
+  const backendDomain = env === 'docker' ? 'backend' : 'localhost'
 
-  const limitByUrl = createRateLimitationMiddleware({
-    keysLimits: (clientRequest) => [{
-      key: (clientRequest.url as string),
-      limit: 3
-    }]
+  const limitByUrlByMinute = createRateLimitationMiddleware({
+    expiry: 60,
+    keysLimits: (clientRequest) => {
+      const metadata = clientRequest.metadata as IMetaData
+      const limit = metadata.rateLimitationBy.minute || 10
+      const limits = [{
+        key: (clientRequest.url as string),
+        limit
+      }]
+      return limits
+    }
   })
 
-  const env = process.env.ENV
+  const userMetaData = createMetadataMiddleware({
+    key: async (clientRequest) => {
+      return '10'
+    },
+    fetchMetadata: (clientRequest) => {
+      // here maybe some kind of authentication mechanism is necessary
+      // JWT, Access token, API token, etc.
+      return got.get(`http://${backendDomain}:8000/users/me/meta`).json()
+    }
+  })
 
   const matchers: IMatcher[] = [
     // load test config
     {
       hosts: ['loadtest'],
-      upstream: env === 'docker' ? 'backend' : 'localhost',
+      upstream: backendDomain,
       port: 8000,
       timeout: 3,
       requestMiddlewares: [
@@ -36,13 +64,13 @@ export function getConfig(): Config {
       requestMiddlewares: [createBasicAuthMiddleware('admin', '1234')],
       stripUri: true,
     },
-    // basic
+    // testing limits and user meta data
     {
       hosts: ['localhost:3000'],
       upstream: 'example.com',
       protocol: 'https:',
       port: 443,
-      requestMiddlewares: [limitByUrl],
+      requestMiddlewares: [userMetaData, limitByUrlByMinute],
       responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test
