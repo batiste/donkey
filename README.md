@@ -2,6 +2,16 @@
 
 A configuration based gateway with minimal features written in TypeScript.
 Can replace Kong for basic purposes.
+
+## Core Features
+
+  * APIs gateway
+  * CORS headers middleware
+  * Remove headers middleware
+  * Basic Auth middleware
+  * Metadata middleware (redis)
+  * Rate limitation middleware (redis)
+  * Authentication middleware
 ## Run the server locally
 
 You will need a redis server running on localhost
@@ -108,16 +118,6 @@ export interface IMatcher {
   stripUri?: boolean
 }
 ```
-
-## Implemented
-
-  * APIs gateway
-  * CORS headers middleware
-  * Remove headers middleware
-  * Basic Auth middleware
-  * Metadata middleware (redis)
-  * Rate limitation middleware (redis)
-  * Authentication middleware
 
 ## Performance and scalability
 
