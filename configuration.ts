@@ -81,7 +81,6 @@ export function getConfig(): Config {
       protocol: 'https:',
       port: 443,
       requestMiddlewares: [userMetaData, authMiddleware, limitByUrlByMinute],
-      responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test
     {
@@ -97,5 +96,10 @@ export function getConfig(): Config {
     },
   ]
   
-  return { matchers }
+  return {
+    matchers,
+    global: {
+      responseMiddlewares: [createCorsMiddleware('http://example.com')]
+    }
+  }
 }

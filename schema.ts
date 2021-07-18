@@ -54,6 +54,17 @@ export interface IMatch {
 
 export interface Config {
   matchers: IMatcher[]
+  /** Applied to all request without conditions */
+  global?: {
+    /**
+     * All middleware to apply on the client request or response
+     */
+    requestMiddlewares?: RequestMiddleware[]
+    /**
+     * All middleware to apply on the upstream response
+     */
+    responseMiddlewares?: ResponseMiddleware[]
+  }
   defaultTimeout?: number
 }
 

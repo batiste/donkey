@@ -5,7 +5,7 @@ Can replace Kong for basic purposes.
 
 ## Core Features
 
-  * APIs gateway
+  * APIs gateway (discriminate by host and url, or apply rules globally)
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware

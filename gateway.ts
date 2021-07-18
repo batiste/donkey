@@ -20,11 +20,13 @@ export function createGateway(config: Config, port: number): http.Server {
 
     const matcher = match.matcher
 
-    if (matcher.requestMiddlewares) {
-      for(let i=0; i < matcher.requestMiddlewares.length; i++) {
-        const middleware = matcher.requestMiddlewares[i];
-        if (await middleware(clientRequest, clientResponse)) { return }
-      }
+    const middlewaresToApply = [
+      ...config.global?.requestMiddlewares || [],
+      ...matcher.requestMiddlewares || []]
+
+    for(let i=0; i < middlewaresToApply.length; i++) {
+      const middleware = middlewaresToApply[i];
+      if (await middleware(clientRequest, clientResponse)) { return }
     }
 
     const options = matcherToOptions(clientRequest, match, config)
@@ -38,10 +40,12 @@ export function createGateway(config: Config, port: number): http.Server {
     const requestFct = options.protocol === 'https:' ? https.request : http.request
 
     const upstreamRequest= requestFct(options, function (upstreamResponse) {
-      if (matcher.responseMiddlewares) {
-        for(let i=0; i < matcher.responseMiddlewares.length; i++) {
-          matcher.responseMiddlewares[i](upstreamResponse)
-        }
+      const middlewaresToApply = [
+        ...config.global?.responseMiddlewares || [],
+        ...matcher.responseMiddlewares || []]
+
+      for(let i=0; i < middlewaresToApply.length; i++) {
+        middlewaresToApply[i](upstreamResponse)
       }
       clientResponse.writeHead(upstreamResponse.statusCode || 200, upstreamResponse.headers)
       upstreamResponse.pipe(clientResponse, {
