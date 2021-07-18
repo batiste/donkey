@@ -29,20 +29,21 @@ export function getConfig(): Config {
     },
     fetchMetadata: (clientRequest) => {
       // here maybe some kind of authentication mechanism is necessary
-      // JWT, Access token, API token, etc.
+      // JWT, Access token, API token, etc. It is up to you and your 
+      // system
       return got.get(`http://${backendDomain}:8000/users/me/meta`).json()
     }
   })
 
   const limitByUrlByMinute = createRateLimitationMiddleware({
-    expiry: 60,
+    timeWindow: 60,
     keysLimits: (clientRequest) => {
       const metadata = clientRequest.metadata as IMetaData
       const userLimit = metadata.rateLimitationBy.minute || 10
       const orgLimit = metadata.orgRateLimitationBy.minute || 10
       return [
-        { key: `user-${metadata.uuid}`, limit: userLimit },
-        { key: `org-${metadata.orgUuid}`, limit: orgLimit }]
+        { key: `user-${metadata.uuid}`, limit: userLimit, name: 'User' },
+        { key: `org-${metadata.orgUuid}`, limit: orgLimit, name: 'Org' }]
     }
   })
 

@@ -7,7 +7,7 @@ export type FetchMetadataSignature = (clientRequest: Request) => Promise<object>
 export type MetaDataKey = (clientRequest: Request) => Promise<string | number>
 
 interface MetadataOptions {
-  key: MetaDataKey
+  key?: MetaDataKey
   fetchMetadata: FetchMetadataSignature
   redisURL?: string
   /** Expiry time for the redis cache, default is 5 minutes */
@@ -18,7 +18,10 @@ export function createMetadataMiddleware(options: MetadataOptions): RequestMiddl
   const url = options.redisURL || process.env.REDIS_URL || 'redis://localhost:6379'
   const client = redis.createClient(url);
 
-  return async function metadataMiddleware(clientRequest: Request, clientResponse: http.ServerResponse) {
+  async function cachedKey(clientRequest: Request) {
+    if (!options.key) {
+      return options.fetchMetadata(clientRequest)
+    }
     const key = await options.key(clientRequest)
     const metadataKey = `dk-metadata-${key}`
     const expiry = options.expiry || 60 * 5
@@ -40,6 +43,11 @@ export function createMetadataMiddleware(options: MetadataOptions): RequestMiddl
         metadata = {}
       }
     }
+    return metadata
+  }
+
+  return async function metadataMiddleware(clientRequest: Request, clientResponse: http.ServerResponse) {
+    const metadata = await cachedKey(clientRequest)
     const m = clientRequest.metadata || {}
     clientRequest.metadata = { ...m, ...metadata }
     return false
