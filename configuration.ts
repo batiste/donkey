@@ -37,6 +37,7 @@ export function getConfig(): Config {
 
   const limitByUrlByMinute = createRateLimitationMiddleware({
     timeWindow: 60,
+    setHeaders: true,
     keysLimits: (clientRequest) => {
       const metadata = clientRequest.metadata as IMetaData
       const userLimit = metadata.rateLimitationBy.minute || 10

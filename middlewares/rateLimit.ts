@@ -9,6 +9,8 @@ interface RateLimitsOptions {
   redisURL?: string
   /** Time window duration in seconds for this rate limitation */
   timeWindow?: number
+  /** Set the rate limits response headers if true */
+  setHeaders?: boolean
 }
 
 interface KeyLimit {
@@ -36,8 +38,10 @@ export function createRateLimitationMiddleware(options: RateLimitsOptions): Requ
           store.incr(limit.key, (err: any, v: number, ttl: number) => {
             if (resolved) { return }
             resolved = true
-            clientResponse.setHeader(`RateLimit-Limit-${limit.name || i}`, v)
-            clientResponse.setHeader(`RateLimit-Remaining-${limit.name || i}`, limit.limit - v)
+            if (options.setHeaders) {
+              clientResponse.setHeader(`RateLimit-Limit-${limit.name || i}`, v)
+              clientResponse.setHeader(`RateLimit-Remaining-${limit.name || i}`, limit.limit - v)
+            }
             if(v <= limit.limit) {
               resolve(false)
             } else {
