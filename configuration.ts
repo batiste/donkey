@@ -15,11 +15,13 @@ export function getConfig(): Config {
     }]
   })
 
+  const env = process.env.ENV
+
   const matchers: IMatcher[] = [
     // load test config
     {
       hosts: ['loadtest'],
-      upstream: 'backend',
+      upstream: env === 'docker' ? 'backend' : 'localhost',
       port: 8000,
       timeout: 3,
       requestMiddlewares: [

@@ -17,6 +17,7 @@ services:
       - redis
     environment:
       REDIS_URL: redis://redis:6379
+      ENV: docker
     build: .
     ports:
       - "3000:3000"
