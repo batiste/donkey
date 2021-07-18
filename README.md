@@ -115,7 +115,8 @@ export interface IMatcher {
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware
-  * Rate limitation middleware
+  * Metadata middlware (redis)
+  * Rate limitation middleware (redis)
 ## Missing features
 
   * Authentication middlewares?
