@@ -1,6 +1,6 @@
 import { createBasicAuthMiddleware } from './middlewares/basicAuth';
 import { createCorsMiddleware } from './middlewares/cors';
-import { createRateLimitMiddleware } from './middlewares/rateLimit';
+import { createRateLimitationMiddleware } from './middlewares/rateLimit';
 import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
 import { Config, IMatcher } from './schema';
 
@@ -8,7 +8,7 @@ export function getConfig(): Config {
 
   const headersToRemove = ['x-authenticated-scope', 'x-consumer-username']
 
-  const limitByUrl = createRateLimitMiddleware({
+  const limitByUrl = createRateLimitationMiddleware({
     keysLimits: (clientRequest) => [{
       key: (clientRequest.url as string),
       limit: 3

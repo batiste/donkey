@@ -2,7 +2,9 @@
 
 A configuration based gateway with minimal features written in TypeScript.
 Can replace Kong for basic purposes.
-## Run the server
+## Run the server locally
+
+You will need a redis server running on localhost
 
 ```bash
 npm install

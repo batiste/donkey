@@ -1,8 +1,8 @@
 import * as http from 'http';
 import { RequestMiddleware } from '../schema';
 import RedisStore = require("rate-limit-redis")
+import { logger } from '../logs';
 
-let store: RedisStore;
 
 interface RateLimitsOptions {
   keysLimits: (clientRequest: http.IncomingMessage) => KeyLimit[]
@@ -15,12 +15,13 @@ interface KeyLimit {
   limit: number
 }
 
-export function createRateLimitMiddleware(options: RateLimitsOptions): RequestMiddleware {
-  if (!store) {
-    store = new RedisStore({
-      expiry: options.expiry || 60,
-      redisURL: options.redisURL || 'redis://redis:6379'});
-  }
+export function createRateLimitationMiddleware(options: RateLimitsOptions): RequestMiddleware {
+  const url = options.redisURL || process.env.REDIS_URL || 'redis://localhost:6379'
+  const store = new RedisStore({
+    expiry: options.expiry || 60,
+    redisURL: url
+  });
+  logger.log(`Rate limitation middleware connected on ${url}`)
 
   return async function rateLimitMiddleware(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
