@@ -13,6 +13,7 @@ const requestListener = function (req, res) {
   if (req.url === '/users/me/meta') {
     return res.end(JSON.stringify({
       uuid: 'asd-2332',
+      orgUuid: 'org-232',
       scopes: 'read-book create-books',
       rateLimitationBy: {second: 5, minute: 5, hour: 120},
       orgRateLimitationBy: {second: 5, minute: 25, hour: 400}

@@ -10,6 +10,7 @@ import { createAuthMiddleware } from './middlewares/auth';
 
 interface IMetaData {
   uuid: string
+  orgUuid: string
   scopes: string
   rateLimitationBy: {second: number, minute: number, hour: number},
   orgRateLimitationBy: {second: number, minute: number, hour: number}
@@ -37,12 +38,11 @@ export function getConfig(): Config {
     expiry: 60,
     keysLimits: (clientRequest) => {
       const metadata = clientRequest.metadata as IMetaData
-      const limit = metadata.rateLimitationBy.minute || 10
-      const limits = [{
-        key: (clientRequest.url as string),
-        limit
-      }]
-      return limits
+      const userLimit = metadata.rateLimitationBy.minute || 10
+      const orgLimit = metadata.orgRateLimitationBy.minute || 10
+      return [
+        { key: `user-${metadata.uuid}`, limit: userLimit },
+        { key: `org-${metadata.orgUuid}`, limit: orgLimit }]
     }
   })
 
