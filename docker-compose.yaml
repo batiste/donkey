@@ -1,5 +1,11 @@
 services:
 
+  redis:
+    image: redis
+    container_name: cache
+    expose:
+      - 6379
+
   backend:
     build: tests/.
     ports:
@@ -8,6 +14,7 @@ services:
   donkey:
     depends_on:
       - backend
+      - redis
     build: .
     ports:
       - "3000:3000"

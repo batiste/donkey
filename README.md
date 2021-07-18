@@ -12,6 +12,7 @@ npm run serve
 Or
 
 ```
+docker compose build donkey
 docker compose up donkey
 ```
 
@@ -112,6 +113,7 @@ export interface IMatcher {
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware
+  * Rate limitation middleware
 ## Missing features
 
   * Authentication middlewares?

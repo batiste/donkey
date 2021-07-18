@@ -13,9 +13,11 @@
   "license": "ISC",
   "dependencies": {
     "commander": "~7.2.0",
+    "rate-limit-redis": "~2.1.0",
     "typescript": "~4.3.4"
   },
   "devDependencies": {
-    "@types/node": "~15.12.4"
+    "@types/node": "~15.12.4",
+    "@types/rate-limit-redis": "~1.7.2"
   }
 }

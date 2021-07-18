@@ -7,7 +7,7 @@ import { Config } from './schema';
 
 export function createGateway(config: Config, port: number): http.Server {
 
-  function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
+  async function onRequest(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
 
     const match = matchRequest(config.matchers, clientRequest)
 
@@ -22,7 +22,8 @@ export function createGateway(config: Config, port: number): http.Server {
 
     if (matcher.requestMiddlewares) {
       for(let i=0; i < matcher.requestMiddlewares.length; i++) {
-        if (matcher.requestMiddlewares[i](clientRequest, clientResponse)) { return }
+        const middleware = matcher.requestMiddlewares[i];
+        if (await middleware(clientRequest, clientResponse)) { return }
       }
     }
 

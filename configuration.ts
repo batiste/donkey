@@ -1,11 +1,19 @@
 import { createBasicAuthMiddleware } from './middlewares/basicAuth';
 import { createCorsMiddleware } from './middlewares/cors';
+import { createRateLimitMiddleware } from './middlewares/rateLimit';
 import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
 import { Config, IMatcher } from './schema';
 
 export function getConfig(): Config {
 
   const headersToRemove = ['x-authenticated-scope', 'x-consumer-username']
+
+  const limitByUrl = createRateLimitMiddleware({
+    keysLimits: (clientRequest) => [{
+      key: (clientRequest.url as string),
+      limit: 3
+    }]
+  })
 
   const matchers: IMatcher[] = [
     // load test config
@@ -14,7 +22,9 @@ export function getConfig(): Config {
       upstream: 'backend',
       port: 8000,
       timeout: 3,
-      requestMiddlewares: [createRemoveHeadersMiddleware(headersToRemove)]
+      requestMiddlewares: [
+        createRemoveHeadersMiddleware(headersToRemove),
+      ]
     },
     // basic auth
     {
@@ -30,6 +40,7 @@ export function getConfig(): Config {
       upstream: 'example.com',
       protocol: 'https:',
       port: 443,
+      requestMiddlewares: [limitByUrl],
       responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test

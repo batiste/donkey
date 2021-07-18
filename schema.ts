@@ -57,7 +57,7 @@ export interface Config {
   defaultTimeout?: number
 }
 
-export type RequestMiddleware = (clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) => boolean
+export type RequestMiddleware = (clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) => Promise<boolean>
 
 export type ResponseMiddleware = (upstreamResponse: http.IncomingMessage) => void
 
