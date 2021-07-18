@@ -48,7 +48,9 @@ export function getConfig(): Config {
 
   const authMiddleware = createAuthMiddleware(async (clientRequest) => {
     const metadata = clientRequest.metadata as IMetaData
-    return !!(metadata && metadata.uuid)
+    if (!metadata || !metadata.uuid) { return false }
+    clientRequest.headers['X-Authenticated-Scope'] = metadata.scopes
+    return true
   })
 
   const matchers: IMatcher[] = [
