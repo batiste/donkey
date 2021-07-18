@@ -35,7 +35,7 @@ export function getConfig(): Config {
     }
   })
 
-  const limitByUrlByMinute = createRateLimitationMiddleware({
+  const limitByMinute = createRateLimitationMiddleware({
     timeWindow: 60,
     setHeaders: true,
     keysLimits: (clientRequest) => {
@@ -80,7 +80,7 @@ export function getConfig(): Config {
       upstream: 'example.com',
       protocol: 'https:',
       port: 443,
-      requestMiddlewares: [userMetaData, authMiddleware, limitByUrlByMinute],
+      requestMiddlewares: [userMetaData, authMiddleware, limitByMinute],
     },
     // test
     {
