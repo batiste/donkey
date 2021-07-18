@@ -1,8 +1,8 @@
 import * as http from 'http';
-import { RequestMiddleware } from '../schema';
+import { RequestMiddleware, Request } from '../schema';
 
 export function createBasicAuthMiddleware(username:string, password: string): RequestMiddleware {
-  return async function basicAuthMiddleware(clientRequest: http.IncomingMessage, clientResponse: http.ServerResponse) {
+  return async function basicAuthMiddleware(clientRequest: Request, clientResponse: http.ServerResponse) {
     // check for basic auth header
     if (!clientRequest.headers.authorization || clientRequest.headers.authorization.indexOf('Basic ') === -1) {
       clientResponse.setHeader('WWW-Authenticate', 'Basic')

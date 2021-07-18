@@ -5,6 +5,7 @@ import { createRateLimitationMiddleware } from './middlewares/rateLimit';
 import { createRemoveHeadersMiddleware } from './middlewares/removeHeaders';
 import { createMetadataMiddleware } from './middlewares/metadata';
 import { Config, IMatcher } from './schema';
+import { createAuthMiddleware } from './middlewares/auth';
 
 
 interface IMetaData {
@@ -21,6 +22,17 @@ export function getConfig(): Config {
   const env = process.env.ENV
   const backendDomain = env === 'docker' ? 'backend' : 'localhost'
 
+  const userMetaData = createMetadataMiddleware({
+    key: async (clientRequest) => {
+      return '10'
+    },
+    fetchMetadata: (clientRequest) => {
+      // here maybe some kind of authentication mechanism is necessary
+      // JWT, Access token, API token, etc.
+      return got.get(`http://${backendDomain}:8000/users/me/meta`).json()
+    }
+  })
+
   const limitByUrlByMinute = createRateLimitationMiddleware({
     expiry: 60,
     keysLimits: (clientRequest) => {
@@ -34,15 +46,9 @@ export function getConfig(): Config {
     }
   })
 
-  const userMetaData = createMetadataMiddleware({
-    key: async (clientRequest) => {
-      return '10'
-    },
-    fetchMetadata: (clientRequest) => {
-      // here maybe some kind of authentication mechanism is necessary
-      // JWT, Access token, API token, etc.
-      return got.get(`http://${backendDomain}:8000/users/me/meta`).json()
-    }
+  const authMiddleware = createAuthMiddleware(async (clientRequest) => {
+    const metadata = clientRequest.metadata as IMetaData
+    return !!(metadata && metadata.uuid)
   })
 
   const matchers: IMatcher[] = [
@@ -70,7 +76,7 @@ export function getConfig(): Config {
       upstream: 'example.com',
       protocol: 'https:',
       port: 443,
-      requestMiddlewares: [userMetaData, limitByUrlByMinute],
+      requestMiddlewares: [userMetaData, authMiddleware, limitByUrlByMinute],
       responseMiddlewares: [createCorsMiddleware('http://example.com')]
     },
     // test
