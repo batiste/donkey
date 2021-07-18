@@ -4,12 +4,13 @@ import * as redis from 'redis';
 import { Request } from '../schema'
 
 export type FetchMetadataSignature = (clientRequest: Request) => Promise<object>
-export type MetaDataKey = (clientRequest: Request) => Promise<string>
+export type MetaDataKey = (clientRequest: Request) => Promise<string | number>
 
 interface MetadataOptions {
   key: MetaDataKey
   fetchMetadata: FetchMetadataSignature
   redisURL?: string
+  /** Expiry time for the redis cache, default is 5 minutes */
   expiry?: number
 }
 
