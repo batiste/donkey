@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { createGateway } from './gateway'
+import { logger } from './logs';
 import { Config } from './schema';
 
 const program = new Command();
@@ -20,6 +21,15 @@ async function start() {
   
   if(options.run) {
     const gateway = createGateway(config, port)
+    const shutdown = () => {
+      logger.log('SIGTERM signal received. Shutting down.');
+      gateway.close(() => {
+        logger.log('Donkey gateway closed.');
+        process.exit(0);
+      });
+    }
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
   }  
 }
 
