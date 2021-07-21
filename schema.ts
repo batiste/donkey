@@ -5,6 +5,10 @@ export interface IMatcher {
    */
   upstream: string
   /**
+   * Protocol to use on the upstream. Default http
+   */
+  protocol?: 'http:' | 'https:'
+  /**
    * Port to use on the upstream, default is 80
    */
   port?: number
@@ -16,10 +20,6 @@ export interface IMatcher {
    * List of uris to match. String.startsWith is used
    */
   uris?: string[]
-  /**
-   * Protocol to use on the upstream. Default http
-   */
-  protocol?: 'http:' | 'https:'
   /**
    * Timeout when the gateway give up on the upstream
    */
