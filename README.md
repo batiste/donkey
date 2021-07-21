@@ -1,4 +1,4 @@
-# 🐴 Donkey is an Opiniated API Gateway
+# 🐴 Donkey is configuration based API Gateway
 
 A configuration based gateway with minimal features written in TypeScript.
 Can replace Kong for basic purposes.
