@@ -22,9 +22,9 @@ async function start() {
   if(options.run) {
     const gateway = createGateway(config, port)
     const shutdown = () => {
-      logger.log('SIGTERM signal received. Shutting down.');
+      logger.log('Shutdown signal received. Shutting down now.');
       gateway.close(() => {
-        logger.log('Donkey gateway closed.');
+        logger.log('Donkey gateway shutdown.');
         process.exit(0);
       });
     }

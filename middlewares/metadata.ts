@@ -2,6 +2,7 @@ import * as http from 'http';
 import { RequestMiddleware } from '../schema';
 import * as redis from 'redis';
 import { Request } from '../schema'
+import { logger } from '../logs';
 
 export type FetchMetadataSignature = (clientRequest: Request) => Promise<object>
 export type MetaDataKey = (clientRequest: Request) => Promise<string | number>
@@ -17,6 +18,14 @@ interface MetadataOptions {
 export function createMetadataMiddleware(options: MetadataOptions): RequestMiddleware {
   const url = options.redisURL || process.env.REDIS_URL || 'redis://localhost:6379'
   const client = redis.createClient(url);
+  logger.log(`Metadata limitation middleware connected on ${url}`)
+
+  const shutdown = () => {
+    logger.log('Metadata middleware: Closing redis connection')
+    client.quit(() => logger.log('Metadata middleware: Redis connection closed'));
+  }
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 
   async function cachedKey(clientRequest: Request) {
     if (!options.key) {

@@ -1,6 +1,7 @@
 import * as http from 'http';
 import { RequestMiddleware } from '../schema';
 import RedisStore = require("rate-limit-redis")
+import * as redis from 'redis';
 import { logger } from '../logs';
 import { Request } from '../schema'
 
@@ -20,12 +21,23 @@ interface KeyLimit {
 }
 
 export function createRateLimitationMiddleware(options: RateLimitsOptions): RequestMiddleware {
-  const url = options.redisURL || process.env.REDIS_URL || 'redis://localhost:6379'
   const timeWindow = options.timeWindow || 60
+
+  const url = options.redisURL || process.env.REDIS_URL || 'redis://localhost:6379'
+  const client = redis.createClient(url);
+
+  const shutdown = () => {
+    logger.log('Limit middleware: Closing redis connection')
+    client.quit(() => logger.log('Limit middleware: Redis connection closed'));
+  }
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+
   const store = new RedisStore({
     expiry: timeWindow,
-    redisURL: url
+    client: client
   });
+
   logger.log(`Rate limitation middleware connected on ${url}`)
 
   return async function rateLimitMiddleware(clientRequest: Request, clientResponse: http.ServerResponse) {
