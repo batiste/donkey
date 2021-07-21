@@ -18,6 +18,8 @@ You will need a redis server running on localhost
 
 ```bash
 npm install
+# on another process, you might need to run the test backend
+node tests/backend.js
 npm run serve
 ```
 
