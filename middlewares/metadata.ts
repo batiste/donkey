@@ -2,7 +2,7 @@ import * as http from 'http';
 import { RequestMiddleware } from '../schema';
 import * as redis from 'redis';
 import { Request } from '../schema'
-import { logger } from '../logs';
+import { logger, onShutdown } from '../logs';
 
 export type FetchMetadataSignature = (clientRequest: Request) => Promise<object>
 export type MetaDataKey = (clientRequest: Request) => Promise<string | number>
@@ -24,8 +24,7 @@ export function createMetadataMiddleware(options: MetadataOptions): RequestMiddl
     logger.log('Metadata middleware: Closing redis connection')
     client.quit(() => logger.log('Metadata middleware: Redis connection closed'));
   }
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  onShutdown(shutdown)
 
   async function cachedKey(clientRequest: Request) {
     if (!options.key) {

@@ -2,7 +2,7 @@ import * as http from 'http';
 import { RequestMiddleware } from '../schema';
 import RedisStore = require("rate-limit-redis")
 import * as redis from 'redis';
-import { logger } from '../logs';
+import { logger, onShutdown } from '../logs';
 import { Request } from '../schema'
 
 interface RateLimitsOptions {
@@ -30,8 +30,7 @@ export function createRateLimitationMiddleware(options: RateLimitsOptions): Requ
     logger.log('Limit middleware: Closing redis connection')
     client.quit(() => logger.log('Limit middleware: Redis connection closed'));
   }
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  onShutdown(shutdown)
 
   const store = new RedisStore({
     expiry: timeWindow,

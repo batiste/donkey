@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { createGateway } from './gateway'
-import { logger } from './logs';
+import { logger, onShutdown } from './logs';
 import { Config } from './schema';
 
 const program = new Command();
@@ -28,8 +28,7 @@ async function start() {
         process.exit(0);
       });
     }
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
+    onShutdown(shutdown)
   }  
 }
 

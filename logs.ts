@@ -10,3 +10,9 @@ export const logger = {
     console.warn({ msg: msg, ...extras })
   }
 }
+
+export function onShutdown(shutdown: () => void) {
+  process.on('SIGHUP', shutdown)
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
+}

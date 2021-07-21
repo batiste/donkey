@@ -31,3 +31,14 @@ server.listen(port, () => {
     console.log(`Backend is running on http://${host}:${port}`);
 });
 
+const shutdown = () => {
+  server.close(() => {
+    console.log('Test backend shutdown.');
+    process.exit(0);
+  });
+}
+
+process.on('SIGHUP', shutdown)
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
+
