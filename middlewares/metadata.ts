@@ -8,7 +8,11 @@ export type FetchMetadataSignature = (clientRequest: Request) => Promise<object>
 export type MetaDataKey = (clientRequest: Request) => Promise<string | number>
 
 interface MetadataOptions {
+  /** A function that return a key to use for the redis cache mechanism. If
+   *  none is provided there will be no cache used.
+   */
   key?: MetaDataKey
+  /** A function that return the object to be stored in the clientRequest.metadata. */
   fetchMetadata: FetchMetadataSignature
   redisURL?: string
   /** Expiry time for the redis cache, default is 5 minutes */

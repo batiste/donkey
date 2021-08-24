@@ -24,6 +24,8 @@ export function getConfig(): Config {
   const backendDomain = env === 'docker' ? 'backend' : 'localhost'
 
   const userMetaData = createMetadataMiddleware({
+    // A function that return a key to use for the redis cache mechanism. If
+    // none is provided there will be no cache used.
     key: async (clientRequest) => {
       return '10'
     },
