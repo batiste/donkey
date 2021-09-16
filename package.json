@@ -1,22 +1,24 @@
 {
   "name": "donkey-gateway",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API Gateway based on static configuration files",
   "main": "lib/donkey.js",
   "types": "lib/donkey.d.ts",
   "scripts": {
-    "prepublishOnly" : "npm run lint",
-    "preversion" : "npm run lint",
-    "version" : "npm run format && git add -A src",
-    "postversion" : "git push && git push --tags",
-    "prepare" : "npm run build",
+    "prepublishOnly": "npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A .",
+    "postversion": "git push && git push --tags",
+    "prepare": "npm run build",
     "format": "prettier --write \"*.ts\" \"middlewares/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "build": "tsc",
     "serve": "npm run build && UV_THREADPOOL_SIZE=8 node build/donkey.js --run",
     "backend": "node tests/backend.js"
   },
-  "files": ["build/**/*"],
+  "files": [
+    "build/**/*"
+  ],
   "author": "batiste.bieler@gmail.com",
   "license": "ISC",
   "dependencies": {
