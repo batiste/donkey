@@ -1,12 +1,13 @@
 {
   "name": "donkey",
   "version": "1.0.0",
-  "description": "Replace Kong",
+  "description": "API Gateway based on static configuration files",
   "main": "donkey.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "tsc",
-    "serve": "npm run tsc && UV_THREADPOOL_SIZE=8 node build/donkey.js --run",
+    "format": "prettier --write \"*.ts\" \"middlewares/*.ts\"",
+    "lint": "tslint -p tsconfig.json",
+    "build": "tsc",
+    "serve": "npm run build && UV_THREADPOOL_SIZE=8 node build/donkey.js --run",
     "backend": "node tests/backend.js"
   },
   "author": "batiste.bieler@gmail.com",
@@ -14,11 +15,14 @@
   "dependencies": {
     "commander": "~7.2.0",
     "got": "~11.8.2",
-    "rate-limit-redis": "~2.1.0",
-    "typescript": "~4.3.4"
+    "rate-limit-redis": "~2.1.0"
   },
   "devDependencies": {
     "@types/node": "~15.12.4",
-    "@types/rate-limit-redis": "~1.7.2"
+    "@types/rate-limit-redis": "~1.7.2",
+    "prettier": "~2.4.1",
+    "tslint": "~6.1.3",
+    "tslint-config-prettier": "~1.18.0",
+    "typescript": "~4.3.4"
   }
 }

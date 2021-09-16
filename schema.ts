@@ -1,78 +1,82 @@
-import * as http from 'http';
+import * as http from "http";
 export interface IMatcher {
   /**
    * Upstream domain, with no protocol, no path
    */
-  upstream: string
+  upstream: string;
   /**
    * Protocol to use on the upstream. Default http
    */
-  protocol?: 'http:' | 'https:'
+  protocol?: "http:" | "https:";
   /**
    * Port to use on the upstream, default is 80
    */
-  port?: number
+  port?: number;
   /**
    * List of hosts to check
    */
-  hosts?: string[]
+  hosts?: string[];
   /**
    * List of uris to match. String.startsWith is used
    */
-  uris?: string[]
+  uris?: string[];
   /**
    * Timeout when the gateway give up on the upstream
    */
-  timeout?: number
+  timeout?: number;
   /**
    * All middleware to apply on the client request or response
    */
-  requestMiddlewares?: RequestMiddleware[]
+  requestMiddlewares?: RequestMiddleware[];
   /**
    * All middleware to apply on the upstream response
    */
-  responseMiddlewares?: ResponseMiddleware[]
+  responseMiddlewares?: ResponseMiddleware[];
   /**
    * Preserve the original host from the client
    */
-  preserveHost?: boolean
+  preserveHost?: boolean;
   /**
    * Remove the matched uri from the rest of the uri
    */
-  stripUri?: boolean
+  stripUri?: boolean;
 }
 
 export interface IMatcherCriteria {
-  host?: string
-  uri?: string
+  host?: string;
+  uri?: string;
 }
 
 export interface IMatch {
-  matcher: IMatcher,
-  criteria: IMatcherCriteria 
+  matcher: IMatcher;
+  criteria: IMatcherCriteria;
 }
 
 export interface Config {
-  matchers: IMatcher[]
+  matchers: IMatcher[];
   /** Applied to all request without conditions */
   global?: {
     /**
      * All middleware to apply on the client request or response
      */
-    requestMiddlewares?: RequestMiddleware[]
+    requestMiddlewares?: RequestMiddleware[];
     /**
      * All middleware to apply on the upstream response
      */
-    responseMiddlewares?: ResponseMiddleware[]
-  }
-  defaultTimeout?: number
+    responseMiddlewares?: ResponseMiddleware[];
+  };
+  defaultTimeout?: number;
 }
 
-export type RequestMiddleware = (clientRequest: Request, clientResponse: http.ServerResponse) => Promise<boolean>
+export type RequestMiddleware = (
+  clientRequest: Request,
+  clientResponse: http.ServerResponse
+) => Promise<boolean>;
 
-export type ResponseMiddleware = (upstreamResponse: http.IncomingMessage) => void
+export type ResponseMiddleware = (
+  upstreamResponse: http.IncomingMessage
+) => void;
 
 export interface Request extends http.IncomingMessage {
-  metadata: object
+  metadata: object;
 }
-

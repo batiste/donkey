@@ -1,89 +1,102 @@
-import * as http from 'http';
-import * as https from 'https';
-import { logger } from './logs';
-import { matchRequest, matcherToOptions } from './match';
-import { Config, Request } from './schema';
-
+import * as http from "http";
+import * as https from "https";
+import { logger } from "./logs";
+import { matchRequest, matcherToOptions } from "./match";
+import { Config, Request } from "./schema";
 
 export function createGateway(config: Config, port: number): http.Server {
-
-  async function onRequest(clientRequest: Request, clientResponse: http.ServerResponse) {
-
-    const match = matchRequest(config.matchers, clientRequest)
+  async function onRequest(
+    clientRequest: Request,
+    clientResponse: http.ServerResponse
+  ) {
+    const match = matchRequest(config.matchers, clientRequest);
 
     if (!match) {
-      logger.warn(`No match found for ${clientRequest.headers.host}, ${clientRequest.url}`)
-      clientResponse.writeHead(503)
-      clientResponse.end('No match on gateway, 🐴 will not move')
-      return
+      logger.warn(
+        `No match found for ${clientRequest.headers.host}, ${clientRequest.url}`
+      );
+      clientResponse.writeHead(503);
+      clientResponse.end("No match on gateway, 🐴 will not move");
+      return;
     }
 
-    const matcher = match.matcher
+    const matcher = match.matcher;
 
     const middlewaresToApply = [
-      ...config.global?.requestMiddlewares || [],
-      ...matcher.requestMiddlewares || []]
+      ...(config.global?.requestMiddlewares || []),
+      ...(matcher.requestMiddlewares || []),
+    ];
 
-    for(let i=0; i < middlewaresToApply.length; i++) {
-      const middleware = middlewaresToApply[i];
-      if (await middleware(clientRequest, clientResponse)) { return }
+    for (const middleware of middlewaresToApply) {
+      if (await middleware(clientRequest, clientResponse)) {
+        return;
+      }
     }
 
-    const options = matcherToOptions(clientRequest, match, config)
+    const options = matcherToOptions(clientRequest, match, config);
 
-    logger.log('Match found', { options, match, host: clientRequest.headers.host, url: clientRequest.url })
+    logger.log("Match found", {
+      options,
+      match,
+      host: clientRequest.headers.host,
+      url: clientRequest.url,
+    });
 
     if (!matcher.preserveHost) {
-      clientRequest.headers['host'] = matcher?.upstream
+      clientRequest.headers.host = matcher?.upstream;
     }
 
-    const requestFct = options.protocol === 'https:' ? https.request : http.request
+    const requestFct =
+      options.protocol === "https:" ? https.request : http.request;
 
-    const upstreamRequest= requestFct(options, function (upstreamResponse) {
-      const middlewaresToApply = [
-        ...config.global?.responseMiddlewares || [],
-        ...matcher.responseMiddlewares || []]
+    const upstreamRequest = requestFct(options, (upstreamResponse) => {
+      const responseMiddlewaresToApply = [
+        ...(config.global?.responseMiddlewares || []),
+        ...(matcher.responseMiddlewares || []),
+      ];
 
-      for(let i=0; i < middlewaresToApply.length; i++) {
-        middlewaresToApply[i](upstreamResponse)
+      for (const middleware of responseMiddlewaresToApply) {
+        middleware(upstreamResponse);
       }
-      clientResponse.writeHead(upstreamResponse.statusCode || 200, upstreamResponse.headers)
+      clientResponse.writeHead(
+        upstreamResponse.statusCode || 200,
+        upstreamResponse.headers
+      );
       upstreamResponse.pipe(clientResponse, {
-        end: true
+        end: true,
       });
     });
 
     clientRequest.pipe(upstreamRequest, {
-      end: true
+      end: true,
     });
 
-    upstreamRequest.on('error', (error) => {
-      logger.error('Error on request', { error, match })
+    upstreamRequest.on("error", (error) => {
+      logger.error("Error on request", { error, match });
       try {
-        clientResponse.writeHead(503)
-        clientResponse.end('Gateway error')
-      } catch(e) {
-        logger.warn('Headers already sent in error handler', e)
+        clientResponse.writeHead(503);
+        clientResponse.end("Gateway error");
+      } catch (e) {
+        logger.warn("Headers already sent in error handler", e);
       }
     });
 
-    upstreamRequest.on('timeout', () => {
-      logger.warn(`Timeout on upstream ${matcher?.upstream}`, { match })
+    upstreamRequest.on("timeout", () => {
+      logger.warn(`Timeout on upstream ${matcher?.upstream}`, { match });
       try {
-        clientResponse.writeHead(503)
-        clientResponse.end('Gateway timeout')
-      } catch(e) {
-        logger.warn('Headers already sent in timeout handler', e)
+        clientResponse.writeHead(503);
+        clientResponse.end("Gateway timeout");
+      } catch (e) {
+        logger.warn("Headers already sent in timeout handler", e);
       }
     });
   }
 
-  logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`)
+  logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`);
 
-  process.on('uncaughtException', (err: any, origin: any) => {
-    logger.error('Uncaught Exception', { err: err, origin })
+  process.on("uncaughtException", (err: any, origin: any) => {
+    logger.error("Uncaught Exception", { err, origin });
   });
 
   return http.createServer(onRequest as any).listen(port);
 }
-
