@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { createGateway } from "./gateway";
 import { logger, onShutdown } from "./logs";
 import { Config } from "./schema";
+import * as path from "path";
 
 const program = new Command();
 
@@ -18,7 +19,9 @@ const options = program.opts();
 
 async function start() {
   const configModule = options.config || "./configuration";
-  const config: Config = (await import(configModule)).getConfig();
+  const pathname = path.resolve(process.cwd(), configModule)
+  logger.log(`Try to import your config file at path ${pathname}`)
+  const config: Config = (await import(pathname)).getConfig();
 
   const port = options.port || 3000;
 
