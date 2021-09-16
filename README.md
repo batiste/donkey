@@ -12,7 +12,18 @@ Can replace Kong for basic purposes.
   * Metadata middleware (redis)
   * Rate limitation middleware (redis)
   * Authentication middleware
-## Run the server locally
+
+## Use the boilerplace project
+
+If you wish to use Donkey directly, we recommend to use [the example project](https://github.com/batiste/donkey-boilerplate)
+
+```bash
+git clone git@github.com:batiste/donkey-boilerplate.git
+cd donkey-boilerplate
+docker compose up
+```
+
+## Run the dev server locally
 
 You will need a redis server running on localhost
 
