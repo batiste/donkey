@@ -18,7 +18,7 @@ program.parse();
 const options = program.opts();
 
 async function start() {
-  const configModule = options.config || "./configuration";
+  const configModule = options.config || "./build/configuration";
   const pathname = path.resolve(process.cwd(), configModule);
   logger.log(`Try to import your config file at path ${pathname}`);
   const config: Config = (await import(pathname)).getConfig();

@@ -59,7 +59,7 @@ export function getConfig(): Config {
     },
     // match HTTP header Host: localhost and the /admin/ uri
     {
-      hosts: ['localhost'],
+      hosts: ['localhost:3000'],
       upstream: 'example.com',
       // at least one uris should match. The match is done with startsWith
       uris: ['/admin/'],
