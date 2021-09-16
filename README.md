@@ -15,7 +15,7 @@ Can replace Kong for basic purposes.
 
 ## Use the boilerplace project
 
-If you wish to use Donkey directly, we recommend to use [https://github.com/batiste/donkey-boilerplate](the example project)
+If you wish to use Donkey directly, we recommend to use [the example project](https://github.com/batiste/donkey-boilerplate)
 
 ```bash
 git clone git@github.com:batiste/donkey-boilerplate.git
