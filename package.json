@@ -1,5 +1,5 @@
 {
-  "name": "donkey",
+  "name": "donkey-gateway",
   "version": "1.0.0",
   "description": "API Gateway based on static configuration files",
   "main": "lib/donkey.js",
