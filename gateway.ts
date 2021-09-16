@@ -76,7 +76,7 @@ export function createGateway(config: Config, port: number): http.Server {
       try {
         clientResponse.writeHead(503);
         clientResponse.end("Gateway error");
-      } catch (e) {
+      } catch (e: any) {
         logger.warn("Headers already sent in error handler", e);
       }
     });
@@ -86,7 +86,7 @@ export function createGateway(config: Config, port: number): http.Server {
       try {
         clientResponse.writeHead(503);
         clientResponse.end("Gateway timeout");
-      } catch (e) {
+      } catch (e: any) {
         logger.warn("Headers already sent in timeout handler", e);
       }
     });
