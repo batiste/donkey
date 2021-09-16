@@ -8,7 +8,7 @@ const program = new Command();
 program
   .option("-r, --run", "Run the gateway")
   .option("-p, --port", "Port to run on, default is 3000")
-  .option("-c, --config", "JavaScript configuration file to be imported");
+  .option("-c, --config <value>", "JavaScript configuration file to be imported");
 
 program.parse();
 const options = program.opts();
