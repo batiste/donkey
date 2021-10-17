@@ -13,6 +13,12 @@ Can replace Kong for basic purposes.
   * Rate limitation middleware (redis)
   * Authentication middleware
 
+## Install
+
+```bash
+npm install donkey-gateway
+```
+
 ## Use the boilerplace project
 
 If you wish to use Donkey directly, we recommend to use [the example project](https://github.com/batiste/donkey-boilerplate)
