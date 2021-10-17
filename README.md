@@ -96,23 +96,23 @@ export function getConfig(): Config {
 ```ts
 export interface IMatcher {
   /**
-   * Upstream domain, with no protocol, no path
+   * Upstream domain, with no protocol and no path.
    */
    upstream: string
    /**
-    * Port to use on the upstream. The default is 80
+    * Port to use on the upstream. The default is 80.
     */
    port?: number
    /**
-    * List of hosts to check
+    * List of hosts to match.
     */
    hosts?: string[]
    /**
-    * List of uris to match. String.startsWith is used
+    * List of uris to match. String.startsWith is used for the match.
     */
    uris?: string[]
    /**
-    * Protocol to use on the upstream. The default is http
+    * Protocol to use on the upstream. The default is http.
     */
    protocol?: 'http:' | 'https:'
    /**
@@ -121,11 +121,11 @@ export interface IMatcher {
     */
    timeout?: number
    /**
-    * All middleware to apply on the client request or response
+    * All middleware to apply on the client request or response.
     */
    requestMiddlewares?: RequestMiddleware[]
    /**
-    * All middleware to apply on the upstream response
+    * All middleware to apply on the upstream response.
     */
    responseMiddlewares?: ResponseMiddleware[]
    /**
