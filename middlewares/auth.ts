@@ -1,7 +1,7 @@
 import * as http from "http";
 import { RequestMiddleware, Request } from "../schema";
 
-type TAuthCheck = (clientRequest: Request) => Promise<boolean>;
+export type TAuthCheck = (clientRequest: Request) => Promise<boolean>;
 
 export function createAuthMiddleware(authCheck: TAuthCheck): RequestMiddleware {
   return async function authMiddleware(

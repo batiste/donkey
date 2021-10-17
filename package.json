@@ -1,6 +1,6 @@
 {
   "name": "donkey-gateway",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "API Gateway based on static configuration files",
   "main": "lib/donkey.js",
   "types": "lib/donkey.d.ts",

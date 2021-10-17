@@ -5,7 +5,7 @@ import * as redis from "redis";
 import { logger, onShutdown } from "../logs";
 import { Request } from "../schema";
 
-interface RateLimitsOptions {
+export interface RateLimitsOptions {
   keysLimits: (clientRequest: Request) => KeyLimit[];
   redisURL?: string;
   /** Time window duration in seconds for this rate limitation */
@@ -14,7 +14,7 @@ interface RateLimitsOptions {
   setHeaders?: boolean;
 }
 
-interface KeyLimit {
+export interface KeyLimit {
   key: string;
   limit: number;
   name?: string;
