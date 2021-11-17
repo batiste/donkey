@@ -11,7 +11,7 @@ Can replace Kong for basic purposes.
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware
-  * Metadata middleware (middleware that can used to fetch extra data for a user, uses redis)
+  * Metadata middleware (middleware that can be used to fetch extra data for a user, organization or anything else specific about the request, uses redis)
   * Authentication middleware
 
 
