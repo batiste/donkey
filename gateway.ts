@@ -15,7 +15,7 @@ export function createGateway(config: Config, port: number): http.Server {
       logger.warn(
         `No match found for ${clientRequest.headers.host}, ${clientRequest.url}`
       );
-      clientResponse.writeHead(503);
+      clientResponse.writeHead(404);
       clientResponse.end("No match on gateway, 🐴 will not move");
       return;
     }

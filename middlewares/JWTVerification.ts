@@ -5,7 +5,7 @@ import { logger } from "../logs";
 
 export type TGetToken = (clientRequest: Request) => string | undefined;
 
-export function extractToken(auth: string) {
+export function extractBearerToken(auth: string) {
   const [type, token] = auth.split(' ')
   if (type == 'Bearer') {
     return token
@@ -14,11 +14,10 @@ export function extractToken(auth: string) {
 
 export const getTokenFromAuthorization: TGetToken = (clientRequest: Request) => {
   const auth_headers = clientRequest.headers['authorization']
-  console.log('getTokenFromAuthorization', auth_headers, clientRequest.headers)
   if(!auth_headers) {
     return
   }
-  return extractToken(auth_headers)
+  return extractBearerToken(auth_headers)
 }
 
 
@@ -41,18 +40,21 @@ export function verify(token: string, secrets: string[]) : jwt.JwtPayload | fals
 }
 
 export interface IJWTOptions {
+  /** Extract the token from the request, default Authorization: Bearer <JTW> */
   getToken: TGetToken
-  removeHeader?: boolean 
+  /** Forward the JWT payload, default: true */
   forwardClaims?: boolean
+  /** Allow a different claim header name, default: X-Claims */
+  claimsHeader?: string
 }
 
 export const DEFAULT_OPTIONS: IJWTOptions = {
   getToken: getTokenFromAuthorization,
   forwardClaims: true,
-  removeHeader: true,
 }
 
 export function createJWTVerificationMiddleware(
+  /** List of secret key that can be used to decode the JWT */
   secrets: string[],
   options: IJWTOptions = DEFAULT_OPTIONS
 ): RequestMiddleware {
@@ -77,16 +79,13 @@ export function createJWTVerificationMiddleware(
       return true
     }
 
-    if (options.removeHeader === true) {
-      delete clientRequest.headers['authorization']
-    }
-
     if (options.forwardClaims === true) {
-      clientRequest.headers['X-Claims'] = JSON.stringify(payload)
+      const header = options.claimsHeader || 'X-Claims'
+      clientRequest.headers[header] = JSON.stringify(payload)
     }
 
     return false;
-  };
+  }
 }
 
 

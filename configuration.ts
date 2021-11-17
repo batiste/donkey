@@ -6,7 +6,7 @@ import { createRemoveHeadersMiddleware } from "./middlewares/removeHeaders";
 import { createMetadataMiddleware } from "./middlewares/metadata";
 import { Config, IMatcher } from "./schema";
 import { createAuthMiddleware } from "./middlewares/auth";
-import { createJWTVerificationMiddleware } from "./middlewares/jwtVerification";
+import { createJWTVerificationMiddleware } from "./middlewares/JWTVerification";
 
 interface IMetaData {
   uuid: string;
@@ -71,7 +71,9 @@ export function getConfig(): Config {
     {
       upstream: "example.com",
       uris: ["/jwt/"],
-      requestMiddlewares: [createJWTVerificationMiddleware(['old-secret', 'secret'])],
+      requestMiddlewares: [
+        createJWTVerificationMiddleware(['old-secret', 'secret']),
+      ],
       stripUri: true,
     },
     // basic auth
