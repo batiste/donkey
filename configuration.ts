@@ -6,6 +6,7 @@ import { createRemoveHeadersMiddleware } from "./middlewares/removeHeaders";
 import { createMetadataMiddleware } from "./middlewares/metadata";
 import { Config, IMatcher } from "./schema";
 import { createAuthMiddleware } from "./middlewares/auth";
+import { createJWTVerificationMiddleware } from "./middlewares/jwtVerification";
 
 interface IMetaData {
   uuid: string;
@@ -65,6 +66,13 @@ export function getConfig(): Config {
       port: 8000,
       timeout: 3,
       requestMiddlewares: [createRemoveHeadersMiddleware(headersToRemove)],
+    },
+    // JWT test
+    {
+      upstream: "example.com",
+      uris: ["/jwt/"],
+      requestMiddlewares: [createJWTVerificationMiddleware(['secret'])],
+      stripUri: true,
     },
     // basic auth
     {
