@@ -82,7 +82,7 @@ export function createJWTVerificationMiddleware(
     }
 
     if (options.forwardClaims === true) {
-      clientRequest.headers['claims'] = JSON.stringify(payload)
+      clientRequest.headers['X-Claims'] = JSON.stringify(payload)
     }
 
     return false;

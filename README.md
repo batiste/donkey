@@ -5,9 +5,9 @@ Can replace Kong for basic purposes.
 
 ## Core Features
 
-  * APIs gateway (discriminate by host and url, or apply rules globally)
+  * APIs gateway (discriminate by host and URL, or apply rules globally)
   * Rate limitation middleware (redis)
-  * JWT verification middleware (rotating secrets, claims decoding and forwading)
+  * JWT verification middleware (rotating secrets, payload decoding and forwading)
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware
