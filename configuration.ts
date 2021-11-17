@@ -71,7 +71,7 @@ export function getConfig(): Config {
     {
       upstream: "example.com",
       uris: ["/jwt/"],
-      requestMiddlewares: [createJWTVerificationMiddleware(['secret'])],
+      requestMiddlewares: [createJWTVerificationMiddleware(['old-secret', 'secret'])],
       stripUri: true,
     },
     // basic auth

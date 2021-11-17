@@ -12,6 +12,7 @@ Can replace Kong for basic purposes.
   * Metadata middleware (redis)
   * Rate limitation middleware (redis)
   * Authentication middleware
+  * JWT verification middleware (rotating secrets, claims decoding and forwading)
 
 ## Install
 
@@ -43,15 +44,14 @@ npm run serve
 Or
 
 ```
-docker compose build donkey
-docker compose up donkey
+docker compose up donkey-dev
 ```
 
 Or
 
 ```bash
-docker build . -t donkey
-docker run -p 3000:3000 donkey
+docker build . -t donkey-dev
+docker run -p 3000:3000 donkey-dev
 ```
 
 ## Configuration

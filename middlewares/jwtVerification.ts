@@ -30,6 +30,9 @@ export function verify(token: string, secrets: string[]) : jwt.JwtPayload | fals
         return payload as jwt.JwtPayload;
       }
     } catch(e: any) {
+      if (e.message === 'invalid signature') {
+        continue
+      }
       logger.warn("JWT verification error", e);
       return false
     }
