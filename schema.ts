@@ -15,7 +15,7 @@ export interface IMatcher {
    /**
     * List of uris to match. String.startsWith is used for the match.
     * A RegExp can also be provided. If stripeUri is true, the first capturing 
-    * parenthesis will be used. If not present the whole match will be used.
+    * parenthesis will be used. If none present the whole match will be used.
     */
    uris?: (string | RegExp)[]
    /**

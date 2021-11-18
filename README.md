@@ -5,7 +5,10 @@ Can replace Kong for basic purposes.
 
 ## Core Features
 
-  * APIs gateway (discriminate by host and URL, or apply rules globally)
+  * APIs gateway
+    * match host and URL to upstream using strings or regular expressions
+    * apply middleware by match
+    * apply middleware globally 
   * Rate limitation middleware (uses redis)
   * JWT verification middleware (rotating secrets, payload decoding and forwading)
   * CORS headers middleware
@@ -111,7 +114,7 @@ export interface IMatcher {
    /**
     * List of uris to match. String.startsWith is used for the match.
     * A RegExp can also be provided. If stripeUri is true, the first capturing 
-    * parenthesis will be used. If not present the whole match will be used.
+    * parenthesis will be used. If none present the whole match will be used.
     */
    uris?: (string | RegExp)[]
    /**
