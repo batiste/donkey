@@ -11,7 +11,7 @@ Can replace Kong for basic purposes.
   * CORS headers middleware
   * Remove headers middleware
   * Basic Auth middleware
-  * Metadata middleware (middleware that can be used to fetch extra data for a user, organization or anything else specific about the request, uses redis)
+  * Metadata middleware (can be used to fetch extra data for a user, organization or anything else specific about the request, uses redis)
   * Authentication middleware
 
 
@@ -107,11 +107,13 @@ export interface IMatcher {
    /**
     * List of hosts to match.
     */
-   hosts?: string[]
+   hosts?: (string | RegExp)[]
    /**
     * List of uris to match. String.startsWith is used for the match.
+    * A RegExp can also be provided. If stripeUri is true, the first capturing 
+    * parenthesis will be used. If not present the whole match will be used.
     */
-   uris?: string[]
+   uris?: (string | RegExp)[]
    /**
     * Protocol to use on the upstream. The default is http.
     */
@@ -136,10 +138,10 @@ export interface IMatcher {
    /**
     * Remove the matched path from the rest of the URI. E.g.
     * If the matcher path is /admin/ and the incoming request is /admin/user/123
-    * the uri used on the upstream will become /user/123. As leading slashe is enforced.
+    * the uri used on the upstream will become /user/123. As leading slash is enforced.
     * The default is false.
     */
-   stripUri?: boolean
+   stripeUri?: boolean
 }
 ```
 

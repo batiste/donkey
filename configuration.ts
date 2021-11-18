@@ -74,15 +74,16 @@ export function getConfig(): Config {
       requestMiddlewares: [
         createJWTVerificationMiddleware(['old-secret', 'secret']),
       ],
-      stripUri: true,
+      stripeUri: true,
     },
     // basic auth
     {
       hosts: ["localhost:3000"],
       upstream: "example.com",
-      uris: ["/admin/"],
+      // the capturing parenthesis indicates what to strip in the URI
+      uris: [/(\/admin)\/.*/],
       requestMiddlewares: [createBasicAuthMiddleware("admin", "1234")],
-      stripUri: true,
+      stripeUri: true,
     },
     // testing limits and user meta data
     {

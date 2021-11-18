@@ -1,10 +1,31 @@
 import * as http from "http";
 import { Config, IMatch, IMatcher, IMatcherCriteria, Request } from "./schema";
 
-function matchUris(uris: string[], url: string): string | false {
+function matchUris(uris: (string | RegExp)[], requestUrl: string): string | false {
   for (const uri of uris) {
-    if (url.startsWith(uri)) {
+    if (uri instanceof RegExp) {
+      const result = uri.exec(requestUrl)
+      if(result) {
+        // we return the first capturing parenthesis if present,
+        // it can be used for striping the URL
+        return result[1] || result[0]
+      }
+    } else if (requestUrl.startsWith(uri)) {
       return uri;
+    }
+  }
+  return false;
+}
+
+function matchHosts(hosts: (string | RegExp)[], requestHost: string): string | false {
+  for (const host of hosts) {
+    if (host instanceof RegExp) {
+      const result = host.exec(requestHost)
+      if(result) {
+        host
+      }
+    } else if (host === requestHost) {
+      return host;
     }
   }
   return false;
@@ -17,7 +38,7 @@ export function matchRequest(
   for (const matcher of matchers) {
     const criteria: IMatcherCriteria = {};
     if (matcher.hosts) {
-      if (matcher.hosts.includes(clientRequest.headers.host as string)) {
+      if (matchHosts(matcher.hosts, clientRequest.headers.host as string)) {
         criteria.host = clientRequest.headers.host;
       } else {
         continue;
@@ -43,7 +64,7 @@ export function matcherToOptions(
 ): http.RequestOptions {
   const matcher = match.matcher;
   let url = clientRequest.url as string;
-  if (matcher.stripUri && match.criteria.uri) {
+  if (matcher.stripeUri && match.criteria.uri) {
     url = url.substr(match.criteria.uri.length);
     if (!url.startsWith("/")) {
       url = "/" + url;
