@@ -3,6 +3,7 @@ import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
+import exp from "constants";
 
 const BACKEND1_PORT = 8001;
 const BACKEND2_PORT = 8002;
@@ -38,13 +39,13 @@ export function getConfig(): Config {
 const requestListener1: http.RequestListener = function (req, res) {
   res.setHeader("Content-Type", "application/json");
   res.writeHead(200);
-  res.end(JSON.stringify({ type: "backend1", url: req.url }));
+  res.end(JSON.stringify({ type: "backend1", url: req.url, headers: req.headers }));
 };
 
 const requestListener2: http.RequestListener = function (req, res) {
   res.setHeader("Content-Type", "application/json");
   res.writeHead(200);
-  res.end(JSON.stringify({ type: "backend2", url: req.url }));
+  res.end(JSON.stringify({ type: "backend2", url: req.url, headers: req.headers }));
 };
 
 describe("gateway", () => {
@@ -101,5 +102,6 @@ describe("gateway", () => {
         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0IjoiMSJ9.JDfCu69YMtGgGfImZq9j0xapAIkEM9Hf6VM_wvd4Z9M"
       );
     expect(response.status).toEqual(200);
+    expect(JSON.parse(response.text).headers['x-claims']).toEqual('{"test":"1"}');
   });
 });
