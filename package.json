@@ -10,7 +10,7 @@
     "version": "npm run format && git add -A .",
     "postversion": "git push && git push --tags",
     "prepare": "npm run build",
-    "format": "prettier --write \"*.ts\" \"middlewares/*.ts\"",
+    "format": "prettier --write \"*.ts\" \"middlewares/*.ts\" \"tests/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "build": "tsc",
     "serve": "npm run build && node build/donkey.js --run",
