@@ -3,49 +3,49 @@ export interface IMatcher {
   /**
    * Upstream domain, with no protocol and no path.
    */
-   upstream: string
-   /**
-    * Port to use on the upstream. The default is 80.
-    */
-   port?: number
-   /**
-    * List of hosts to match.
-    */
-   hosts?: (string | RegExp)[]
-   /**
-    * List of uris to match. String.startsWith is used for the match.
-    * A RegExp can also be provided. If stripeUri is true, the first capturing 
-    * parenthesis will be used. If none present the whole match will be used.
-    */
-   uris?: (string | RegExp)[]
-   /**
-    * Protocol to use on the upstream. The default is http.
-    */
-   protocol?: 'http:' | 'https:'
-   /**
-    * Timeout when the gateway give up on the upstream. There is a default
-    * of 30 seconds.
-    */
-   timeout?: number
-   /**
-    * All middleware to apply on the client request or response.
-    */
-   requestMiddlewares?: RequestMiddleware[]
-   /**
-    * All middleware to apply on the upstream response.
-    */
-   responseMiddlewares?: ResponseMiddleware[]
-   /**
-    * Preserve the original host from the client. The default is false.
-    */
-   preserveHost?: boolean
-   /**
-    * Remove the matched path from the rest of the URI. E.g.
-    * If the matcher path is /admin/ and the incoming request is /admin/user/123
-    * the uri used on the upstream will become /user/123. As leading slash is enforced.
-    * The default is false.
-    */
-   stripeUri?: boolean
+  upstream: string;
+  /**
+   * Port to use on the upstream. The default is 80.
+   */
+  port?: number;
+  /**
+   * List of hosts to match.
+   */
+  hosts?: (string | RegExp)[];
+  /**
+   * List of uris to match. String.startsWith is used for the match.
+   * A RegExp can also be provided. If stripeUri is true, the first capturing
+   * parenthesis will be used. If none present the whole match will be used.
+   */
+  uris?: (string | RegExp)[];
+  /**
+   * Protocol to use on the upstream. The default is http.
+   */
+  protocol?: "http:" | "https:";
+  /**
+   * Timeout when the gateway give up on the upstream. There is a default
+   * of 30 seconds.
+   */
+  timeout?: number;
+  /**
+   * All middleware to apply on the client request or response.
+   */
+  requestMiddlewares?: RequestMiddleware[];
+  /**
+   * All middleware to apply on the upstream response.
+   */
+  responseMiddlewares?: ResponseMiddleware[];
+  /**
+   * Preserve the original host from the client. The default is false.
+   */
+  preserveHost?: boolean;
+  /**
+   * Remove the matched path from the rest of the URI. E.g.
+   * If the matcher path is /admin/ and the incoming request is /admin/user/123
+   * the uri used on the upstream will become /user/123. As leading slash is enforced.
+   * The default is false.
+   */
+  stripeUri?: boolean;
 }
 
 export interface IMatcherCriteria {

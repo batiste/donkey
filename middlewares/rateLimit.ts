@@ -5,7 +5,7 @@ import * as redis from "redis";
 import { logger, onShutdown } from "../logs";
 import { Request } from "../schema";
 
-  /** A list of rate limitation to apply on a single time window */
+/** A list of rate limitation to apply on a single time window */
 export interface RateLimitsOptions {
   /** Function returning a list of rate limit to apply */
   keysLimits: (clientRequest: Request) => KeyLimit[];
@@ -78,7 +78,7 @@ export function createRateLimitationMiddleware(
         });
       });
       if (limitReached) {
-        anyLimitReached = true
+        anyLimitReached = true;
       }
     }
 

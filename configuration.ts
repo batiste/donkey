@@ -72,7 +72,7 @@ export function getConfig(): Config {
       upstream: "example.com",
       uris: ["/jwt/"],
       requestMiddlewares: [
-        createJWTVerificationMiddleware(['old-secret', 'secret']),
+        createJWTVerificationMiddleware(["old-secret", "secret"]),
       ],
       stripeUri: true,
     },
