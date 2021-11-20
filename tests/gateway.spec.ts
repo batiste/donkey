@@ -2,24 +2,34 @@ import { Config, IMatcher } from "../schema";
 import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http"
+import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
 
 const BACKEND1_PORT = 8001
 const BACKEND2_PORT = 8002
 
 export function getConfig(): Config {
   const matchers: IMatcher[] = [
-    // match the HTTP header Host: loadtest
+    // BACKEND1_PORT
     {
       uris: ['/admin/'],
       upstream: 'localhost',
       port: BACKEND1_PORT,
       stripeUri: true,
     },
-    // match any leftover requests
+    // BACKEND2_PORT
     {
       uris: ['/admin/blop', '/test'],
       upstream: 'localhost',
       port: BACKEND2_PORT,
+    },
+    // JWT
+    {
+      uris: ["/jwt/"],
+      upstream: "localhost",
+      port: BACKEND2_PORT,
+      requestMiddlewares: [
+        createJWTVerificationMiddleware(["old-secret", "secret"]),
+      ],
     },
   ]
   return { matchers }
@@ -75,6 +85,17 @@ describe('gateway', () => {
     response = await request.get('/test/')
     expect(response.status).toEqual(200)
     expect(JSON.parse(response.text).type).toEqual("backend2")
+  });
+
+  it('JWT', async () => {
+    let request = supertest(gateway)
+    let response = await request.get('/jwt/')
+        
+    expect(response.status).toEqual(401)
+
+    request = supertest(gateway)
+    response = await request.get('/jwt/').set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZXN0IjoiMSJ9.JDfCu69YMtGgGfImZq9j0xapAIkEM9Hf6VM_wvd4Z9M')
+    expect(response.status).toEqual(200)
   });
 
 });
