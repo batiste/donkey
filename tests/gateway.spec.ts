@@ -97,7 +97,6 @@ describe("gateway", () => {
 
     expect(response.status).toEqual(401);
 
-    request = supertest(gateway);
     response = await request
       .get("/jwt/")
       .set(
