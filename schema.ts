@@ -85,4 +85,5 @@ export type ResponseMiddleware = (
 
 export interface Request extends http.IncomingMessage {
   metadata: object;
+  match: IMatch;
 }

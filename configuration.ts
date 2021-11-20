@@ -82,7 +82,7 @@ export function getConfig(): Config {
       upstream: "example.com",
       // the capturing parenthesis indicates what to strip in the URI.
       // ["/admin/"] is equivalent.
-      uris: [/(\/admin)\/.*/],
+      uris: [/^(\/admin)\/.*/],
       requestMiddlewares: [createBasicAuthMiddleware("admin", "1234")],
       stripeUri: true,
     },

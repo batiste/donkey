@@ -20,6 +20,7 @@ export function createGateway(config: Config, port: number): http.Server {
       return;
     }
 
+    clientRequest.match = match;
     const matcher = match.matcher;
 
     const middlewaresToApply = [

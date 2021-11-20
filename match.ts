@@ -1,7 +1,7 @@
 import * as http from "http";
 import { Config, IMatch, IMatcher, IMatcherCriteria, Request } from "./schema";
 
-function matchUris(uris: (string | RegExp)[], requestUrl: string): string | false {
+export function matchUris(uris: (string | RegExp)[], requestUrl: string): string | false {
   for (const uri of uris) {
     if (uri instanceof RegExp) {
       const result = uri.exec(requestUrl)
@@ -17,12 +17,12 @@ function matchUris(uris: (string | RegExp)[], requestUrl: string): string | fals
   return false;
 }
 
-function matchHosts(hosts: (string | RegExp)[], requestHost: string): string | false {
+export function matchHosts(hosts: (string | RegExp)[], requestHost: string): string | false {
   for (const host of hosts) {
     if (host instanceof RegExp) {
       const result = host.exec(requestHost)
       if(result) {
-        host
+        return requestHost
       }
     } else if (host === requestHost) {
       return host;
