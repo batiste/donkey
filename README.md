@@ -6,6 +6,7 @@ Can replace Kong for basic purposes.
 ## Core Features
 
   * APIs gateway
+    * The configuration is based on a TypeScript function called at runtime
     * Match host and URL to upstream using strings or regular expressions
     * Apply middleware by match
     * Apply middleware globally
