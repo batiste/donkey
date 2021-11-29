@@ -34,7 +34,7 @@ describe("matchRequest", () => {
     const socket: any = {};
     const request: Request = new http.IncomingMessage(socket) as any;
     request.url = "/admin";
-    request.headers["host"] = "example.com";
+    request.headers.host = "example.com";
 
     console.log(matchRequest(matcher, request));
     expect(matchRequest(matcher, request)?.criteria).toEqual({ uri: "/admin" });
@@ -45,7 +45,7 @@ describe("matchRequest", () => {
     request.url = "/hello/blop";
     expect(matchRequest(matcher, request)?.criteria).toEqual({ uri: "/hello" });
     request.url = "/nop";
-    request.headers["host"] = "nop.com";
+    request.headers.host = "nop.com";
     expect(matchRequest(matcher, request)?.criteria).toEqual({});
   });
 });

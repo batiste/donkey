@@ -35,7 +35,7 @@ export function getConfig(): Config {
   return { matchers };
 }
 
-const requestListener1: http.RequestListener = function (req, res) {
+const requestListener1: http.RequestListener = (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.writeHead(200);
   res.end(
@@ -43,7 +43,7 @@ const requestListener1: http.RequestListener = function (req, res) {
   );
 };
 
-const requestListener2: http.RequestListener = function (req, res) {
+const requestListener2: http.RequestListener = (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.writeHead(200);
   res.end(
@@ -70,7 +70,7 @@ describe("gateway", () => {
 
   it("404", async () => {
     const request = supertest(gateway);
-    let response = await request.get("/does-not-exist/");
+    const response = await request.get("/does-not-exist/");
 
     expect(response.status).toEqual(404);
   });
@@ -92,7 +92,7 @@ describe("gateway", () => {
   });
 
   it("JWT", async () => {
-    let request = supertest(gateway);
+    const request = supertest(gateway);
     let response = await request.get("/jwt/");
 
     expect(response.status).toEqual(401);

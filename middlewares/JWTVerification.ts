@@ -7,7 +7,7 @@ export type TGetToken = (clientRequest: Request) => string | undefined;
 
 export function extractBearerToken(auth: string) {
   const [type, token] = auth.split(" ");
-  if (type == "Bearer") {
+  if (type === "Bearer") {
     return token;
   }
 }
@@ -15,11 +15,11 @@ export function extractBearerToken(auth: string) {
 export const getTokenFromAuthorization: TGetToken = (
   clientRequest: Request
 ) => {
-  const auth_headers = clientRequest.headers["authorization"];
-  if (!auth_headers) {
+  const authHeaders = clientRequest.headers.authorization;
+  if (!authHeaders) {
     return;
   }
-  return extractBearerToken(auth_headers);
+  return extractBearerToken(authHeaders);
 };
 
 export function verify(
