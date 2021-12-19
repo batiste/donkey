@@ -3,6 +3,7 @@ import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
+import { createCorsOptionsMiddleware } from "../middlewares/cors";
 
 const BACKEND1_PORT = 8001;
 const BACKEND2_PORT = 8002;
@@ -29,6 +30,17 @@ export function getConfig(): Config {
       port: BACKEND2_PORT,
       requestMiddlewares: [
         createJWTVerificationMiddleware(["old-secret", "secret"]),
+      ],
+    },
+    // cors tests
+    {
+      uris: ["/cors/"],
+      upstream: "localhost",
+      port: BACKEND2_PORT,
+      requestMiddlewares: [
+        createCorsOptionsMiddleware({
+          allowOrigins: ["http://test-cors.com", /http:\/\/hello-.*\.com/]
+        }),
       ],
     },
   ];
@@ -107,5 +119,23 @@ describe("gateway", () => {
     expect(JSON.parse(response.text).headers["x-claims"]).toEqual(
       '{"test":"1"}'
     );
+  });
+
+  it("Cors", async () => {
+    const request = supertest(gateway);
+    let response = await request.options("/cors/").set({ origin: 'http://test-cors.com' });
+
+    expect(response.status).toEqual(204);
+    expect(response.headers['access-control-allow-origin']).toEqual('http://test-cors.com');
+
+    response = await request.options("/cors/").set({ origin: 'http://hello-world.com' });
+
+    expect(response.status).toEqual(204);
+    expect(response.headers['access-control-allow-origin']).toEqual('http://hello-world.com');
+
+    response = await request.options("/cors/").set({ origin: 'http://wrong.com' });
+
+    expect(response.status).toEqual(204);
+    expect(response.headers['access-control-allow-origin']).toEqual(undefined);
   });
 });

@@ -60,20 +60,23 @@ export interface IMatch {
 
 export interface Config {
   matchers: IMatcher[];
-  /** Applied to all request without conditions */
+  /** Applied to all request without conditions. */
   global?: {
     /**
-     * All middleware to apply on the client request or response
+     * All middleware to apply on the client request or response.
      */
     requestMiddlewares?: RequestMiddleware[];
     /**
-     * All middleware to apply on the upstream response
+     * All middleware to apply on the upstream response.
      */
     responseMiddlewares?: ResponseMiddleware[];
   };
   defaultTimeout?: number;
 }
 
+/** Use this if you want to create a middlware that cares
+ *  about request and response. Return true if you handled 
+ *  the response completly and you want not other middleware to be applied. */
 export type RequestMiddleware = (
   clientRequest: Request,
   clientResponse: http.ServerResponse
