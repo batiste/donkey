@@ -40,7 +40,7 @@ export function getConfig(): Config {
       requestMiddlewares: [
         createCorsOptionsMiddleware({
           allowOrigins: ["http://test-cors.com", /http:\/\/hello-.*\.com/],
-          allowMethods: ["GET", "POST"]
+          allowMethods: ["GET", "POST"],
         }),
       ],
     },
@@ -125,27 +125,47 @@ describe("gateway", () => {
   it("Cors", async () => {
     const request = supertest(gateway);
 
-    let response = await request.options("/cors/").set({ origin: 'http://test-cors.com' });
+    let response = await request
+      .options("/cors/")
+      .set({ origin: "http://test-cors.com" });
     expect(response.status).toEqual(204);
-    expect(response.headers['access-control-allow-origin']).toEqual('http://test-cors.com');
+    expect(response.headers["access-control-allow-origin"]).toEqual(
+      "http://test-cors.com"
+    );
 
-    response = await request.options("/cors/").set({ origin: 'http://hello-world.com' });
+    response = await request
+      .options("/cors/")
+      .set({ origin: "http://hello-world.com" });
     expect(response.status).toEqual(204);
-    expect(response.headers['access-control-allow-origin']).toEqual('http://hello-world.com');
-    expect(response.headers['access-control-allow-methods']).toEqual('GET, POST, OPTIONS');
+    expect(response.headers["access-control-allow-origin"]).toEqual(
+      "http://hello-world.com"
+    );
+    expect(response.headers["access-control-allow-methods"]).toEqual(
+      "GET, POST, OPTIONS"
+    );
 
-    response = await request.options("/cors/").set({ origin: 'http://wrong.com' });
+    response = await request
+      .options("/cors/")
+      .set({ origin: "http://wrong.com" });
     expect(response.status).toEqual(204);
-    expect(response.headers['access-control-allow-origin']).toEqual(undefined);
+    expect(response.headers["access-control-allow-origin"]).toEqual(undefined);
 
-    response = await request.post("/cors/").set({ origin: 'http://test-cors.com' });
+    response = await request
+      .post("/cors/")
+      .set({ origin: "http://test-cors.com" });
     expect(response.status).toEqual(200);
-    expect(response.headers['access-control-allow-origin']).toEqual('http://test-cors.com');
-    expect(response.headers['access-control-allow-methods']).toEqual('GET, POST, OPTIONS');
+    expect(response.headers["access-control-allow-origin"]).toEqual(
+      "http://test-cors.com"
+    );
+    expect(response.headers["access-control-allow-methods"]).toEqual(
+      "GET, POST, OPTIONS"
+    );
 
-    response = await request.delete("/cors/").set({ origin: 'http://test-cors.com' });
+    response = await request
+      .delete("/cors/")
+      .set({ origin: "http://test-cors.com" });
     expect(response.status).toEqual(200);
-    expect(response.headers['access-control-allow-origin']).toEqual(undefined);
-    expect(response.headers['access-control-allow-methods']).toEqual(undefined);
+    expect(response.headers["access-control-allow-origin"]).toEqual(undefined);
+    expect(response.headers["access-control-allow-methods"]).toEqual(undefined);
   });
 });

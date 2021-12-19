@@ -74,9 +74,11 @@ export interface Config {
   defaultTimeout?: number;
 }
 
-/** Use this if you want to create a middlware that cares
- *  about request and response. Return true if you handled 
- *  the response completly and you want not other middleware to be applied. */
+/**
+ * Use this if you want to create a middlware that cares
+ * about request and response. Return true if you handled
+ * the response completly and you want not other middleware to be applied.
+ */
 export type RequestMiddleware = (
   clientRequest: Request,
   clientResponse: http.ServerResponse
