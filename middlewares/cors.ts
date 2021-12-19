@@ -13,8 +13,10 @@ export function createCorsMiddleware(domain: string): ResponseMiddleware {
 
 interface CorsOptions {
   allowOrigins: (string | RegExp)[]
-  methods?: string[]
+  allowMethods?: string[]
 }
+
+// based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
 
 /** Middleware that accepts many possible origins */
 export function createCorsOptionsMiddleware(options: CorsOptions): RequestMiddleware {
@@ -24,13 +26,19 @@ export function createCorsOptionsMiddleware(options: CorsOptions): RequestMiddle
   ) {
     const origin = clientRequest.headers.origin || ''
     const match = matchHosts(options.allowOrigins, origin)
+    const method = clientRequest.method || ''
+    const methodAllowed = options.allowMethods?.includes(method) || method === 'OPTIONS'
 
-    if (match) {
+    if (match && methodAllowed) {
+      if (options.allowMethods) {
+        const methods = [...options.allowMethods, 'OPTIONS'];
+        clientResponse.setHeader("access-control-allow-methods", methods.join(', '));
+      }
       clientResponse.setHeader("access-control-allow-credentials", "true");
       clientResponse.setHeader("access-control-allow-origin", match);
     }
 
-    if(clientRequest.method == 'OPTIONS') {
+    if(clientRequest.method === 'OPTIONS') {
       clientResponse.writeHead(204);
       clientResponse.end('');
       return true

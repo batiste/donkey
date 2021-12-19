@@ -36,7 +36,6 @@ describe("matchRequest", () => {
     request.url = "/admin";
     request.headers.host = "example.com";
 
-    console.log(matchRequest(matcher, request));
     expect(matchRequest(matcher, request)?.criteria).toEqual({ uri: "/admin" });
     request.url = "/";
     expect(matchRequest(matcher, request)?.criteria).toEqual({
