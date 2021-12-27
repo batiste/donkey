@@ -4,6 +4,7 @@ import { createGateway } from "../gateway";
 import * as http from "http";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
 import { createCorsOptionsMiddleware } from "../middlewares/cors";
+import { createXRequestIdMiddleware } from "../middlewares/xRequestId";
 
 const BACKEND1_PORT = 8001;
 const BACKEND2_PORT = 8002;
@@ -43,6 +44,13 @@ export function getConfig(): Config {
           allowMethods: ["GET", "POST"],
         }),
       ],
+    },
+    // X-Request-ID
+    {
+      uris: ["/x-request-id/"],
+      upstream: "localhost",
+      port: BACKEND2_PORT,
+      requestMiddlewares: [createXRequestIdMiddleware()],
     },
   ];
   return { matchers };
@@ -167,5 +175,27 @@ describe("gateway", () => {
     expect(response.status).toEqual(200);
     expect(response.headers["access-control-allow-origin"]).toEqual(undefined);
     expect(response.headers["access-control-allow-methods"]).toEqual(undefined);
+  });
+
+  it("X Request ID", async () => {
+    const request = supertest(gateway);
+
+    let response = await request.get("/x-request-id/");
+    expect(response.status).toEqual(200);
+    expect(response.headers["x-request-id"].length).toBeGreaterThan(3);
+
+    response = await request
+      .get("/x-request-id/")
+      .set({ "x-request-id": "id-blop" });
+
+    expect(response.status).toEqual(200);
+    expect(response.headers["x-request-id"]).toBe("id-blop");
+
+    response = await request
+      .get("/x-request-id/")
+      .set({ "X-Request-ID": "id-blop" });
+
+    expect(response.status).toEqual(200);
+    expect(response.headers["x-request-id"]).toBe("id-blop");
   });
 });
