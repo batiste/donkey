@@ -14,7 +14,7 @@ Can replace Kong for basic purposes.
   * JWT verification middleware (rotating secrets, payload decoding and forwading)
   * CORS headers middleware
   * Remove headers middleware
-  * X-Request-ID creation and propagation middlware
+  * X-Request-ID creation and propagation middleware
   * Basic Auth middleware
   * Metadata middleware (can be used to fetch extra data for a user, organization or anything else specific about the request, uses redis)
   * Authentication middleware
