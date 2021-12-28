@@ -1,10 +1,11 @@
-import { Config, IMatcher } from "../schema";
+import { Config, IMatcher, RequestMiddleware } from "../schema";
 import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
 import { createCorsOptionsMiddleware } from "../middlewares/cors";
 import { createXRequestIdMiddleware } from "../middlewares/xRequestId";
+import { createBasicAuthMiddleware } from "../middlewares/basicAuth";
 
 const BACKEND1_PORT = 8001;
 const BACKEND2_PORT = 8002;
@@ -45,15 +46,21 @@ export function getConfig(): Config {
         }),
       ],
     },
-    // X-Request-ID
+    // basic auth
     {
-      uris: ["/x-request-id/"],
+      uris: ["/basic-auth/"],
       upstream: "localhost",
       port: BACKEND2_PORT,
-      requestMiddlewares: [createXRequestIdMiddleware()],
+      requestMiddlewares: [createBasicAuthMiddleware("admin", "1234")],
     },
   ];
-  return { matchers };
+
+  const global: RequestMiddleware[] = [
+    // X-Request-ID
+    createXRequestIdMiddleware(),
+  ];
+
+  return { matchers, global: { requestMiddlewares: global } };
 }
 
 const requestListener1: http.RequestListener = (req, res) => {
@@ -180,22 +187,40 @@ describe("gateway", () => {
   it("X Request ID", async () => {
     const request = supertest(gateway);
 
-    let response = await request.get("/x-request-id/");
+    let response = await request.get("/cors/");
     expect(response.status).toEqual(200);
     expect(response.headers["x-request-id"].length).toBeGreaterThan(3);
 
-    response = await request
-      .get("/x-request-id/")
-      .set({ "x-request-id": "id-blop" });
+    response = await request.get("/cors/").set({ "x-request-id": "id-blop" });
 
     expect(response.status).toEqual(200);
     expect(response.headers["x-request-id"]).toBe("id-blop");
 
-    response = await request
-      .get("/x-request-id/")
-      .set({ "X-Request-ID": "id-blop" });
+    response = await request.get("/cors/").set({ "X-Request-ID": "id-blop" });
 
     expect(response.status).toEqual(200);
     expect(response.headers["x-request-id"]).toBe("id-blop");
+  });
+
+  it("Basic Auth", async () => {
+    const request = supertest(gateway);
+
+    const toBase64 = (data: string) => {
+      let buff = new Buffer(data);
+      return buff.toString("base64");
+    };
+
+    let response = await request.get("/basic-auth/");
+    expect(response.status).toEqual(401);
+
+    response = await request
+      .get("/basic-auth/")
+      .set({ authorization: `Basic ${toBase64("admin:wrong")}` });
+    expect(response.status).toEqual(401);
+
+    response = await request
+      .get("/basic-auth/")
+      .set({ authorization: `Basic ${toBase64("admin:1234")}` });
+    expect(response.status).toEqual(200);
   });
 });
