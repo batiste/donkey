@@ -1,6 +1,6 @@
 # 🐴 Donkey is a configuration based API Gateway
 
-A configuration based gateway with a decent array of features written in TypeScript.
+A configuration based HTTPs gateway with a decent array of features written in TypeScript.
 Can replace Kong for basic purposes.
 
 ## Core Features
