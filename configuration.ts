@@ -7,6 +7,7 @@ import { createMetadataMiddleware } from "./middlewares/metadata";
 import { Config, IMatcher } from "./schema";
 import { createAuthMiddleware } from "./middlewares/auth";
 import { createJWTVerificationMiddleware } from "./middlewares/JWTVerification";
+import { logger } from "./logs";
 
 interface IMetaData {
   uuid: string;
@@ -27,11 +28,18 @@ export function getConfig(): Config {
     key: async (clientRequest) => {
       return "10";
     },
-    fetchMetadata: (clientRequest) => {
+    fetchMetadata: async (clientRequest) => {
       // here maybe some kind of authentication mechanism is necessary
       // JWT, Access token, API token, etc. It is up to you and your
       // system
-      return got.get(`http://${backendDomain}:8000/users/me/meta`).json();
+      const url = `http://${backendDomain}:8000/users/me/meta`
+      try {
+        const data = await got.get(url).json();
+        return data as object
+      } catch(e: any) {
+        logger.error(`Error trying to reach ${url}`, e)
+        return {}
+      }
     },
   });
 
