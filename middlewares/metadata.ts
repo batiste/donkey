@@ -39,7 +39,13 @@ export function createMetadataMiddleware(
 
   async function cachedKey(clientRequest: Request) {
     if (!options.key) {
-      return options.fetchMetadata(clientRequest);
+      try {
+        const metadata = await options.fetchMetadata(clientRequest);
+        return metadata
+      } catch(e: any) {
+        logger.error('Error trying to fetchMetadata', e)
+        return {}
+      }
     }
     const key = await options.key(clientRequest);
     const metadataKey = `dk-metadata-${key}`;
@@ -55,7 +61,12 @@ export function createMetadataMiddleware(
     });
     let metadata = await pmetadata;
     if (!metadata) {
-      metadata = await options.fetchMetadata(clientRequest);
+      try {
+        metadata = await options.fetchMetadata(clientRequest);
+      } catch(e: any) {
+        logger.error('Error trying to fetchMetadata', e)
+        metadata = null 
+      }
       if (metadata) {
         client.set(metadataKey, JSON.stringify(metadata), "EX", expiry);
       } else {

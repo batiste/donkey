@@ -28,18 +28,11 @@ export function getConfig(): Config {
     key: async (clientRequest) => {
       return "10";
     },
-    fetchMetadata: async (clientRequest) => {
+    fetchMetadata: (clientRequest) => {
       // here maybe some kind of authentication mechanism is necessary
       // JWT, Access token, API token, etc. It is up to you and your
       // system
-      const url = `http://${backendDomain}:8000/users/me/meta`
-      try {
-        const data = await got.get(url).json();
-        return data as object
-      } catch(e: any) {
-        logger.error(`Error trying to reach ${url}`, e)
-        return {}
-      }
+      return got.get(`http://${backendDomain}:8000/users/me/meta`).json();
     },
   });
 
