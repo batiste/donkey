@@ -38,6 +38,9 @@ export function createRateLimitationMiddleware(
   const url =
     options.redisURL || process.env.REDIS_URL || "redis://localhost:6379";
   const client = redis.createClient(url);
+  client.on("error", (error) => {
+    logger.error("Rate limitation middleware: redis error", { error });
+  });
 
   const shutdown = () => {
     logger.log("Limit middleware: Closing redis connection");

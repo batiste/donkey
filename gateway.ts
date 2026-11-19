@@ -4,8 +4,34 @@ import { logger } from "./logs";
 import { matchRequest, matcherToOptions } from "./match";
 import { Config, Request } from "./schema";
 
+class UpstreamTimeoutError extends Error {
+  constructor() {
+    super("Upstream timeout");
+    this.name = "UpstreamTimeoutError";
+  }
+}
+
+/**
+ * Send an error response to the client if it is still possible, otherwise
+ * destroy the connection so the client does not wait forever.
+ */
+function sendError(
+  clientResponse: http.ServerResponse,
+  status: number,
+  message: string
+) {
+  if (clientResponse.headersSent) {
+    clientResponse.destroy();
+    return;
+  }
+  if (!clientResponse.writableEnded) {
+    clientResponse.writeHead(status, { "content-type": "text/plain" });
+    clientResponse.end(message);
+  }
+}
+
 export function createGateway(config: Config, port: number): http.Server {
-  async function onRequest(
+  async function proxy(
     clientRequest: Request,
     clientResponse: http.ServerResponse
   ) {
@@ -32,6 +58,10 @@ export function createGateway(config: Config, port: number): http.Server {
       if (await middleware(clientRequest, clientResponse)) {
         return;
       }
+      // the client might have gone away while a middleware was running
+      if (clientRequest.destroyed || clientResponse.destroyed) {
+        return;
+      }
     }
 
     const options = matcherToOptions(clientRequest, match, config);
@@ -44,7 +74,7 @@ export function createGateway(config: Config, port: number): http.Server {
     });
 
     if (!matcher.preserveHost) {
-      clientRequest.headers.host = matcher?.upstream;
+      clientRequest.headers.host = matcher.upstream;
     }
 
     const requestFct =
@@ -56,48 +86,87 @@ export function createGateway(config: Config, port: number): http.Server {
         ...(matcher.responseMiddlewares || []),
       ];
 
-      for (const middleware of responseMiddlewaresToApply) {
-        middleware(upstreamResponse);
+      try {
+        for (const middleware of responseMiddlewaresToApply) {
+          middleware(upstreamResponse);
+        }
+      } catch (error: any) {
+        logger.error("Error in response middleware", {
+          error,
+          upstream: matcher.upstream,
+        });
+        upstreamResponse.destroy();
+        sendError(clientResponse, 500, "Gateway error");
+        return;
       }
+
+      upstreamResponse.on("error", (error) => {
+        logger.error("Error while reading the upstream response", {
+          error,
+          upstream: matcher.upstream,
+        });
+        clientResponse.destroy();
+      });
+
       clientResponse.writeHead(
-        upstreamResponse.statusCode || 200,
+        upstreamResponse.statusCode || 502,
         upstreamResponse.headers
       );
-      upstreamResponse.pipe(clientResponse, {
-        end: true,
-      });
-    });
-
-    clientRequest.pipe(upstreamRequest, {
-      end: true,
-    });
-
-    upstreamRequest.on("error", (error) => {
-      logger.error("Error on request", { error, match });
-      try {
-        clientResponse.writeHead(503);
-        clientResponse.end("Gateway error");
-      } catch (e: any) {
-        logger.warn("Headers already sent in error handler", e);
-      }
+      upstreamResponse.pipe(clientResponse);
     });
 
     upstreamRequest.on("timeout", () => {
-      logger.warn(`Timeout on upstream ${matcher?.upstream}`, { match });
-      try {
-        clientResponse.writeHead(503);
-        clientResponse.end("Gateway timeout");
-      } catch (e: any) {
-        logger.warn("Headers already sent in timeout handler", e);
+      logger.warn(`Timeout on upstream ${matcher.upstream}`);
+      // destroying with an error triggers the "error" handler below
+      upstreamRequest.destroy(new UpstreamTimeoutError());
+    });
+
+    upstreamRequest.on("error", (error) => {
+      if (clientResponse.destroyed) {
+        // the client went away, nothing to answer
+        return;
+      }
+      if (error instanceof UpstreamTimeoutError) {
+        sendError(clientResponse, 504, "Gateway timeout");
+        return;
+      }
+      logger.error("Error on upstream request", {
+        error,
+        upstream: matcher.upstream,
+      });
+      sendError(clientResponse, 502, "Bad gateway");
+    });
+
+    // If the client aborts or the connection breaks before the response was
+    // fully sent, stop working on the upstream request as well.
+    clientResponse.on("close", () => {
+      if (!clientResponse.writableFinished) {
+        upstreamRequest.destroy();
       }
     });
+    clientRequest.on("error", () => upstreamRequest.destroy());
+
+    clientRequest.pipe(upstreamRequest);
+  }
+
+  async function onRequest(
+    incomingMessage: http.IncomingMessage,
+    clientResponse: http.ServerResponse
+  ) {
+    const clientRequest = incomingMessage as Request;
+    try {
+      await proxy(clientRequest, clientResponse);
+    } catch (error: any) {
+      logger.error("Unhandled error while processing the request", {
+        error,
+        host: clientRequest.headers.host,
+        url: clientRequest.url,
+      });
+      sendError(clientResponse, 500, "Gateway error");
+    }
   }
 
   logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`);
 
-  process.on("uncaughtException", (err: any, origin: any) => {
-    logger.error("Uncaught Exception", { err, origin });
-  });
-
-  return http.createServer(onRequest as any).listen(port);
+  return http.createServer(onRequest).listen(port);
 }

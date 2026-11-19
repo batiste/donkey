@@ -27,6 +27,9 @@ export function createMetadataMiddleware(
   const url =
     options.redisURL || process.env.REDIS_URL || "redis://localhost:6379";
   const client = redis.createClient(url);
+  client.on("error", (error) => {
+    logger.error("Metadata middleware: redis error", { error });
+  });
   logger.log(`Metadata limitation middleware connected on ${url}`);
 
   const shutdown = () => {
@@ -55,7 +58,12 @@ export function createMetadataMiddleware(
         if (!reply) {
           resolve(null);
         } else {
-          resolve(JSON.parse(reply));
+          try {
+            resolve(JSON.parse(reply));
+          } catch (error: any) {
+            logger.warn("Metadata middleware: invalid cached value", { error });
+            resolve(null);
+          }
         }
       });
     });

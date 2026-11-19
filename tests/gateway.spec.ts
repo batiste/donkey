@@ -2,43 +2,44 @@ import { Config, IMatcher, RequestMiddleware } from "../schema";
 import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http";
+import { AddressInfo } from "net";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
 import { createCorsOptionsMiddleware } from "../middlewares/cors";
 import { createXRequestIdMiddleware } from "../middlewares/xRequestId";
 import { createBasicAuthMiddleware } from "../middlewares/basicAuth";
 
-const BACKEND1_PORT = 8001;
-const BACKEND2_PORT = 8002;
+interface Ports {
+  backend1: number;
+  backend2: number;
+  slow: number;
+  down: number;
+}
 
-export function getConfig(): Config {
+export function getConfig(ports: Ports): Config {
   const matchers: IMatcher[] = [
-    // BACKEND1_PORT
     {
       uris: ["/admin/"],
       upstream: "localhost",
-      port: BACKEND1_PORT,
+      port: ports.backend1,
       stripeUri: true,
     },
-    // BACKEND2_PORT
     {
       uris: ["/admin/blop", "/test"],
       upstream: "localhost",
-      port: BACKEND2_PORT,
+      port: ports.backend2,
     },
-    // JWT
     {
       uris: ["/jwt/"],
       upstream: "localhost",
-      port: BACKEND2_PORT,
+      port: ports.backend2,
       requestMiddlewares: [
         createJWTVerificationMiddleware(["old-secret", "secret"]),
       ],
     },
-    // cors tests
     {
       uris: ["/cors/"],
       upstream: "localhost",
-      port: BACKEND2_PORT,
+      port: ports.backend2,
       requestMiddlewares: [
         createCorsOptionsMiddleware({
           allowOrigins: ["http://test-cors.com", /http:\/\/hello-.*\.com/],
@@ -46,65 +47,121 @@ export function getConfig(): Config {
         }),
       ],
     },
-    // basic auth
     {
       uris: ["/basic-auth/"],
       upstream: "localhost",
-      port: BACKEND2_PORT,
+      port: ports.backend2,
       requestMiddlewares: [createBasicAuthMiddleware("admin", "1234")],
+    },
+    {
+      uris: ["/throws/"],
+      upstream: "localhost",
+      port: ports.backend2,
+      requestMiddlewares: [
+        async () => {
+          throw new Error("middleware failure");
+        },
+      ],
+    },
+    {
+      uris: ["/slow/"],
+      upstream: "localhost",
+      port: ports.slow,
+      timeout: 0.2,
+    },
+    {
+      uris: ["/hang/"],
+      upstream: "localhost",
+      port: ports.slow,
+    },
+    {
+      uris: ["/down/"],
+      upstream: "localhost",
+      port: ports.down,
+    },
+    {
+      uris: ["/echo/"],
+      upstream: "localhost",
+      port: ports.backend2,
     },
   ];
 
-  const global: RequestMiddleware[] = [
-    // X-Request-ID
-    createXRequestIdMiddleware(),
-  ];
+  const global: RequestMiddleware[] = [createXRequestIdMiddleware()];
 
   return { matchers, global: { requestMiddlewares: global } };
 }
 
-const requestListener1: http.RequestListener = (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.writeHead(200);
-  res.end(
-    JSON.stringify({ type: "backend1", url: req.url, headers: req.headers })
-  );
-};
+function jsonBackend(type: string): http.RequestListener {
+  return (req, res) => {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", () => {
+      res.setHeader("Content-Type", "application/json");
+      res.writeHead(200);
+      res.end(
+        JSON.stringify({
+          type,
+          url: req.url,
+          method: req.method,
+          headers: req.headers,
+          body,
+        })
+      );
+    });
+  };
+}
 
-const requestListener2: http.RequestListener = (req, res) => {
-  res.setHeader("Content-Type", "application/json");
-  res.writeHead(200);
-  res.end(
-    JSON.stringify({ type: "backend2", url: req.url, headers: req.headers })
+function listen(server: http.Server): Promise<number> {
+  return new Promise((resolve) =>
+    server.listen(0, () => resolve((server.address() as AddressInfo).port))
   );
-};
+}
+
+function close(server: http.Server): Promise<void> {
+  server.closeAllConnections();
+  return new Promise((resolve) => server.close(() => resolve()));
+}
 
 describe("gateway", () => {
   let backend1: http.Server;
   let backend2: http.Server;
+  let slow: http.Server;
+  let onSlowRequestClosed: () => void = () => undefined;
   let gateway: http.Server;
+  let request: ReturnType<typeof supertest>;
 
-  beforeAll(() => {
-    gateway = createGateway(getConfig(), 3000);
-    backend1 = http.createServer(requestListener1).listen(BACKEND1_PORT);
-    backend2 = http.createServer(requestListener2).listen(BACKEND2_PORT);
+  beforeAll(async () => {
+    backend1 = http.createServer(jsonBackend("backend1"));
+    backend2 = http.createServer(jsonBackend("backend2"));
+    slow = http.createServer((req, res) => {
+      res.on("close", () => onSlowRequestClosed());
+      setTimeout(() => res.end("too late"), 2000).unref();
+    });
+    const down = http.createServer();
+    const ports: Ports = {
+      backend1: await listen(backend1),
+      backend2: await listen(backend2),
+      slow: await listen(slow),
+      down: await listen(down),
+    };
+    // nothing listens on this port anymore
+    await close(down);
+    gateway = createGateway(getConfig(ports), 0);
+    request = supertest(gateway);
   });
 
-  afterAll(() => {
-    backend1.close();
-    backend2.close();
-    gateway.close();
+  afterAll(async () => {
+    await Promise.all([close(backend1), close(backend2), close(slow)]);
+    await close(gateway);
   });
 
   it("404", async () => {
-    const request = supertest(gateway);
     const response = await request.get("/does-not-exist/");
 
     expect(response.status).toEqual(404);
   });
 
   it("matchUris", async () => {
-    const request = supertest(gateway);
     let response = await request.get("/admin/");
 
     expect(response.status).toEqual(200);
@@ -120,7 +177,6 @@ describe("gateway", () => {
   });
 
   it("JWT", async () => {
-    const request = supertest(gateway);
     let response = await request.get("/jwt/");
 
     expect(response.status).toEqual(401);
@@ -138,8 +194,6 @@ describe("gateway", () => {
   });
 
   it("Cors", async () => {
-    const request = supertest(gateway);
-
     let response = await request
       .options("/cors/")
       .set({ origin: "http://test-cors.com" });
@@ -185,8 +239,6 @@ describe("gateway", () => {
   });
 
   it("X Request ID", async () => {
-    const request = supertest(gateway);
-
     let response = await request.get("/cors/");
     expect(response.status).toEqual(200);
     expect(response.headers["x-request-id"].length).toBeGreaterThan(3);
@@ -203,8 +255,6 @@ describe("gateway", () => {
   });
 
   it("Basic Auth", async () => {
-    const request = supertest(gateway);
-
     const toBase64 = (data: string) => {
       return Buffer.from(data).toString("base64");
     };
@@ -221,5 +271,49 @@ describe("gateway", () => {
       .get("/basic-auth/")
       .set({ authorization: `Basic ${toBase64("admin:1234")}` });
     expect(response.status).toEqual(200);
+  });
+  it("returns 500 when a middleware throws", async () => {
+    const response = await request.get("/throws/");
+    expect(response.status).toEqual(500);
+  });
+
+  it("returns 504 and gives up when the upstream is too slow", async () => {
+    const start = Date.now();
+    const response = await request.get("/slow/");
+    expect(response.status).toEqual(504);
+    expect(Date.now() - start).toBeLessThan(1500);
+  });
+
+  it("cancels the upstream request when the client aborts", async () => {
+    const upstreamClosed = new Promise<void>(
+      (resolve) => (onSlowRequestClosed = resolve)
+    );
+    const port = (gateway.address() as AddressInfo).port;
+    const clientRequest = http.get({ port, path: "/hang/" });
+    clientRequest.on("error", () => undefined);
+    setTimeout(() => clientRequest.destroy(), 100);
+    // the slow backend would answer after 2s on its own, so require the
+    // upstream request to be closed well before that
+    const tooLate = new Promise<string>((resolve) =>
+      setTimeout(() => resolve("still open"), 1000).unref()
+    );
+    await expect(
+      Promise.race([upstreamClosed.then(() => "closed"), tooLate])
+    ).resolves.toEqual("closed");
+  });
+
+  it("returns 502 when the upstream is unreachable", async () => {
+    const response = await request.get("/down/");
+    expect(response.status).toEqual(502);
+  });
+
+  it("streams the request body to the upstream", async () => {
+    const response = await request
+      .post("/echo/")
+      .set("content-type", "text/plain")
+      .send("hello donkey");
+    expect(response.status).toEqual(200);
+    expect(response.body.method).toEqual("POST");
+    expect(response.body.body).toEqual("hello donkey");
   });
 });
