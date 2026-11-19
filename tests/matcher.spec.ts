@@ -1,4 +1,4 @@
-import { matchHosts, matchUris, matchRequest } from "../match";
+import { matchHosts, matchUris, matchRequest, normalizeUrl } from "../match";
 import { IMatcher, Request } from "../schema";
 import * as http from "http";
 
@@ -46,5 +46,42 @@ describe("matchRequest", () => {
     request.url = "/nop";
     request.headers.host = "nop.com";
     expect(matchRequest(matcher, request)?.criteria).toEqual({});
+  });
+});
+
+describe("normalizeUrl", () => {
+  it("resolves dot segments and duplicate slashes", () => {
+    expect(normalizeUrl("/admin")).toEqual("/admin");
+    expect(normalizeUrl("/admin/")).toEqual("/admin/");
+    expect(normalizeUrl("/public/../admin/secret")).toEqual("/admin/secret");
+    expect(normalizeUrl("/public/./file")).toEqual("/public/file");
+    expect(normalizeUrl("//admin//users")).toEqual("/admin/users");
+    expect(normalizeUrl("/../../etc/passwd")).toEqual("/etc/passwd");
+  });
+
+  it("keeps the query string untouched", () => {
+    expect(normalizeUrl("/a/../b?next=/../x&y=%2e%2e")).toEqual(
+      "/b?next=/../x&y=%2e%2e"
+    );
+  });
+
+  it("keeps legitimate percent-encoding", () => {
+    expect(normalizeUrl("/files/my%20file.txt")).toEqual(
+      "/files/my%20file.txt"
+    );
+    expect(normalizeUrl("/v1.2/..thing")).toEqual("/v1.2/..thing");
+  });
+
+  it("rejects encoded traversal, backslashes and non origin-form URLs", () => {
+    expect(normalizeUrl("/public/%2e%2e/admin")).toBeNull();
+    expect(normalizeUrl("/public/%2E%2E/admin")).toBeNull();
+    expect(normalizeUrl("/public/.%2e/admin")).toBeNull();
+    expect(normalizeUrl("/public/..%2fadmin")).toBeNull();
+    expect(normalizeUrl("/public/..%5cadmin")).toBeNull();
+    expect(normalizeUrl("/public\\..\\admin")).toBeNull();
+    expect(normalizeUrl("/bad%zzencoding")).toBeNull();
+    expect(normalizeUrl("http://evil.com/admin")).toBeNull();
+    expect(normalizeUrl("*")).toBeNull();
+    expect(normalizeUrl("")).toBeNull();
   });
 });

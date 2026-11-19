@@ -1,5 +1,11 @@
 export { createGateway } from "./gateway";
-export { matchRequest, matchUris, matchHosts, matcherToOptions } from "./match";
+export {
+  matchRequest,
+  matchUris,
+  matchHosts,
+  matcherToOptions,
+  normalizeUrl,
+} from "./match";
 export { logger, onShutdown } from "./logs";
 export * from "./schema";
 

@@ -3,6 +3,7 @@ import supertest from "supertest";
 import { createGateway } from "../gateway";
 import * as http from "http";
 import { AddressInfo } from "net";
+import jwt from "jsonwebtoken";
 import { createJWTVerificationMiddleware } from "../middlewares/JWTVerification";
 import { createCorsOptionsMiddleware } from "../middlewares/cors";
 import { createXRequestIdMiddleware } from "../middlewares/xRequestId";
@@ -109,6 +110,24 @@ function jsonBackend(type: string): http.RequestListener {
       );
     });
   };
+}
+
+/** Raw request that bypasses any client side URL normalisation */
+function rawGet(
+  server: http.Server,
+  path: string,
+  headers: http.OutgoingHttpHeaders = {}
+): Promise<{ status: number; body: string }> {
+  const port = (server.address() as AddressInfo).port;
+  return new Promise((resolve, reject) => {
+    http
+      .get({ port, path, headers }, (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => resolve({ status: res.statusCode || 0, body }));
+      })
+      .on("error", reject);
+  });
 }
 
 function listen(server: http.Server): Promise<number> {
@@ -272,6 +291,51 @@ describe("gateway", () => {
       .set({ authorization: `Basic ${toBase64("admin:1234")}` });
     expect(response.status).toEqual(200);
   });
+  it("matches on the normalised path to prevent auth bypass", async () => {
+    // "/test" is public, "/basic-auth/" is protected
+    let response = await rawGet(gateway, "/test/../basic-auth/");
+    expect(response.status).toEqual(401);
+
+    response = await rawGet(gateway, "/test//../admin/hello");
+    expect(JSON.parse(response.body).type).toEqual("backend1");
+    expect(JSON.parse(response.body).url).toEqual("/hello");
+
+    response = await rawGet(gateway, "/test/%2e%2e/basic-auth/");
+    expect(response.status).toEqual(400);
+
+    response = await rawGet(gateway, "/test/..%2fbasic-auth/");
+    expect(response.status).toEqual(400);
+  });
+
+  it("JWT: rejects unsigned tokens and accepts HMAC algorithms", async () => {
+    const unsigned = jwt.sign({ admin: true }, "", { algorithm: "none" });
+    let response = await request
+      .get("/jwt/")
+      .set("Authorization", `Bearer ${unsigned}`);
+    expect(response.status).toEqual(401);
+
+    const hs512 = jwt.sign({ test: "2" }, "old-secret", {
+      algorithm: "HS512",
+    });
+    response = await request
+      .get("/jwt/")
+      .set("Authorization", `Bearer ${hs512}`);
+    expect(response.status).toEqual(200);
+    expect(JSON.parse(response.text).headers["x-claims"]).toContain(
+      '"test":"2"'
+    );
+  });
+
+  it("JWT: the forwarded claims cannot be spoofed by the client", async () => {
+    const token = jwt.sign({ user: "real" }, "secret");
+    const response = await request
+      .get("/jwt/")
+      .set("Authorization", `Bearer ${token}`)
+      .set("X-Claims", '{"user":"admin"}');
+    const claims = JSON.parse(JSON.parse(response.text).headers["x-claims"]);
+    expect(claims.user).toEqual("real");
+  });
+
   it("returns 500 when a middleware throws", async () => {
     const response = await request.get("/throws/");
     expect(response.status).toEqual(500);

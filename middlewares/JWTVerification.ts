@@ -22,13 +22,17 @@ export const getTokenFromAuthorization: TGetToken = (
   return extractBearerToken(authHeaders);
 };
 
+/** Secrets are shared keys, so only HMAC algorithms make sense. */
+export const DEFAULT_ALGORITHMS: jwt.Algorithm[] = ["HS256", "HS384", "HS512"];
+
 export function verify(
   token: string,
-  secrets: string[]
+  secrets: string[],
+  algorithms: jwt.Algorithm[] = DEFAULT_ALGORITHMS
 ): jwt.JwtPayload | false {
   for (const secret of secrets) {
     try {
-      const payload = jwt.verify(token, secret);
+      const payload = jwt.verify(token, secret, { algorithms });
       if (payload) {
         return payload as jwt.JwtPayload;
       }
@@ -45,23 +49,29 @@ export function verify(
 
 export interface IJWTOptions {
   /** Extract the token from the request, default Authorization: Bearer <JTW> */
-  getToken: TGetToken;
+  getToken?: TGetToken;
   /** Forward the JWT payload, default: true */
   forwardClaims?: boolean;
   /** Allow a different claim header name, default: X-Claims */
   claimsHeader?: string;
+  /** Accepted signing algorithms, default: HS256, HS384, HS512 */
+  algorithms?: jwt.Algorithm[];
 }
 
-export const DEFAULT_OPTIONS: IJWTOptions = {
+export const DEFAULT_OPTIONS = {
   getToken: getTokenFromAuthorization,
   forwardClaims: true,
+  claimsHeader: "X-Claims",
+  algorithms: DEFAULT_ALGORITHMS,
 };
 
 export function createJWTVerificationMiddleware(
   /** List of secret key that can be used to decode the JWT */
   secrets: string[],
-  options: IJWTOptions = DEFAULT_OPTIONS
+  userOptions: IJWTOptions = {}
 ): RequestMiddleware {
+  // partial options are merged with the defaults
+  const options = { ...DEFAULT_OPTIONS, ...userOptions };
   return async function authMiddleware(
     clientRequest: Request,
     clientResponse: http.ServerResponse
@@ -74,7 +84,7 @@ export function createJWTVerificationMiddleware(
       return true;
     }
 
-    const payload = verify(token, secrets);
+    const payload = verify(token, secrets, options.algorithms);
 
     if (!payload) {
       clientResponse.writeHead(401);
@@ -83,8 +93,8 @@ export function createJWTVerificationMiddleware(
     }
 
     if (options.forwardClaims === true) {
-      const header = options.claimsHeader || "X-Claims";
-      clientRequest.headers[header] = JSON.stringify(payload);
+      clientRequest.headers[options.claimsHeader.toLowerCase()] =
+        JSON.stringify(payload);
     }
 
     return false;

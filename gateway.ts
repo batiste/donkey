@@ -1,7 +1,7 @@
 import * as http from "http";
 import * as https from "https";
 import { logger } from "./logs";
-import { matchRequest, matcherToOptions } from "./match";
+import { matchRequest, matcherToOptions, normalizeUrl } from "./match";
 import { Config, Request } from "./schema";
 
 class UpstreamTimeoutError extends Error {
@@ -35,6 +35,15 @@ export function createGateway(config: Config, port: number): http.Server {
     clientRequest: Request,
     clientResponse: http.ServerResponse
   ) {
+    const normalizedUrl = normalizeUrl(clientRequest.url || "");
+    if (normalizedUrl === null) {
+      logger.warn(`Rejected invalid request path ${clientRequest.url}`);
+      clientResponse.writeHead(400);
+      clientResponse.end("Invalid request path");
+      return;
+    }
+    clientRequest.url = normalizedUrl;
+
     const match = matchRequest(config.matchers, clientRequest);
 
     if (!match) {
