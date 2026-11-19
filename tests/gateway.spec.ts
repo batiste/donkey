@@ -206,8 +206,7 @@ describe("gateway", () => {
     const request = supertest(gateway);
 
     const toBase64 = (data: string) => {
-      let buff = new Buffer(data);
-      return buff.toString("base64");
+      return Buffer.from(data).toString("base64");
     };
 
     let response = await request.get("/basic-auth/");

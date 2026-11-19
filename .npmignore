@@ -1,3 +1,6 @@
 tsconfig.json
-tslint.json
+tsconfig.test.json
+eslint.config.mjs
 .prettierrc
+tests/
+coverage/

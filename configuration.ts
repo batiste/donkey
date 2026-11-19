@@ -7,7 +7,6 @@ import { createMetadataMiddleware } from "./middlewares/metadata";
 import { Config, IMatcher } from "./schema";
 import { createAuthMiddleware } from "./middlewares/auth";
 import { createJWTVerificationMiddleware } from "./middlewares/JWTVerification";
-import { logger } from "./logs";
 
 interface IMetaData {
   uuid: string;

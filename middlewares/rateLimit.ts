@@ -1,6 +1,6 @@
 import * as http from "http";
 import { RequestMiddleware } from "../schema";
-import RedisStore = require("rate-limit-redis");
+import RedisStore from "rate-limit-redis";
 import * as redis from "redis";
 import { logger, onShutdown } from "../logs";
 import { Request } from "../schema";
@@ -62,7 +62,8 @@ export function createRateLimitationMiddleware(
     for (let i = 0; i < keysLimits.length; i++) {
       const limitReached = await new Promise((resolve) => {
         const limit = keysLimits[i];
-        store.incr(limit.key, (err: any, v: number, ttl: number) => {
+        store.incr(limit.key, (err?: unknown, hits?: number) => {
+          const v = hits as number;
           if (options.setHeaders) {
             clientResponse.setHeader(`RateLimit-Limit-${limit.name || i}`, v);
             clientResponse.setHeader(
