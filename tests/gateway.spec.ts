@@ -97,6 +97,11 @@ function jsonBackend(type: string): http.RequestListener {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
+      if (req.url?.includes("hop-by-hop")) {
+        res.setHeader("X-Internal", "1");
+        res.setHeader("Proxy-Authenticate", "Basic");
+        res.setHeader("Connection", "keep-alive, X-Internal");
+      }
       res.setHeader("Content-Type", "application/json");
       res.writeHead(200);
       res.end(
@@ -334,6 +339,64 @@ describe("gateway", () => {
       .set("X-Claims", '{"user":"admin"}');
     const claims = JSON.parse(JSON.parse(response.text).headers["x-claims"]);
     expect(claims.user).toEqual("real");
+  });
+
+  it("sets X-Forwarded-* headers and ignores client provided ones", async () => {
+    const response = await request
+      .get("/echo/")
+      .set("Host", "public.example.com")
+      .set("X-Forwarded-For", "6.6.6.6")
+      .set("X-Forwarded-Proto", "https")
+      .set("X-Forwarded-Host", "spoofed.com");
+    const headers = JSON.parse(response.text).headers;
+    expect(headers["x-forwarded-for"]).toMatch(/127\.0\.0\.1$/);
+    expect(headers["x-forwarded-for"]).not.toContain("6.6.6.6");
+    expect(headers["x-forwarded-host"]).toEqual("public.example.com");
+    expect(headers["x-forwarded-proto"]).toEqual("http");
+    expect(headers["host"]).toEqual("localhost");
+  });
+
+  it("does not forward hop-by-hop request headers", async () => {
+    const response = await request
+      .get("/echo/")
+      .set("Connection", "keep-alive, X-Secret")
+      .set("X-Secret", "1")
+      .set("TE", "trailers")
+      .set("Proxy-Authorization", "Basic abc")
+      .set("Keep-Alive", "timeout=99");
+    const headers = JSON.parse(response.text).headers;
+    expect(headers["x-secret"]).toBeUndefined();
+    expect(headers["te"]).toBeUndefined();
+    expect(headers["proxy-authorization"]).toBeUndefined();
+    expect(headers["keep-alive"]).toBeUndefined();
+  });
+
+  it("does not forward hop-by-hop response headers", async () => {
+    const res = await new Promise<http.IncomingMessage>((resolve) =>
+      http.get(
+        {
+          port: (gateway.address() as AddressInfo).port,
+          path: "/echo/hop-by-hop",
+        },
+        resolve
+      )
+    );
+    res.resume();
+    expect(res.statusCode).toEqual(200);
+    expect(res.headers["x-internal"]).toBeUndefined();
+    expect(res.headers["proxy-authenticate"]).toBeUndefined();
+  });
+
+  it("reuses upstream connections", async () => {
+    let connections = 0;
+    const counter = () => connections++;
+    backend1.on("connection", counter);
+    for (let i = 0; i < 5; i++) {
+      const response = await request.get("/admin/keep-alive");
+      expect(response.status).toEqual(200);
+    }
+    backend1.off("connection", counter);
+    expect(connections).toBeLessThanOrEqual(1);
   });
 
   it("returns 500 when a middleware throws", async () => {

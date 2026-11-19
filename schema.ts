@@ -72,6 +72,18 @@ export interface Config {
     responseMiddlewares?: ResponseMiddleware[];
   };
   defaultTimeout?: number;
+  /**
+   * Set to true when Donkey runs behind another proxy or load balancer that
+   * you trust: existing X-Forwarded-For/Host/Proto headers are then kept and
+   * extended. The default is false: Donkey is the edge and overwrites them,
+   * so clients cannot spoof them.
+   */
+  trustForwardedHeaders?: boolean;
+  /**
+   * Options for the HTTP(S) agents used to connect to the upstreams.
+   * The default is { keepAlive: true }.
+   */
+  upstreamAgentOptions?: http.AgentOptions;
 }
 
 /**

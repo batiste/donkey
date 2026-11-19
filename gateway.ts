@@ -1,5 +1,6 @@
 import * as http from "http";
 import * as https from "https";
+import { removeHopByHopHeaders, setForwardedHeaders } from "./headers";
 import { logger } from "./logs";
 import { matchRequest, matcherToOptions, normalizeUrl } from "./match";
 import { Config, Request } from "./schema";
@@ -31,6 +32,15 @@ function sendError(
 }
 
 export function createGateway(config: Config, port: number): http.Server {
+  // Reuse connections to the upstreams instead of opening a new TCP (and
+  // TLS) connection for every request.
+  const agentOptions: http.AgentOptions = {
+    keepAlive: true,
+    ...config.upstreamAgentOptions,
+  };
+  const httpAgent = new http.Agent(agentOptions);
+  const httpsAgent = new https.Agent(agentOptions);
+
   async function proxy(
     clientRequest: Request,
     clientResponse: http.ServerResponse
@@ -43,6 +53,12 @@ export function createGateway(config: Config, port: number): http.Server {
       return;
     }
     clientRequest.url = normalizedUrl;
+
+    // Done before the middlewares so they see the headers that will be sent
+    // upstream, and so that headers they add cannot be removed by a
+    // client-provided Connection header.
+    removeHopByHopHeaders(clientRequest.headers);
+    setForwardedHeaders(clientRequest, !!config.trustForwardedHeaders);
 
     const match = matchRequest(config.matchers, clientRequest);
 
@@ -86,8 +102,9 @@ export function createGateway(config: Config, port: number): http.Server {
       clientRequest.headers.host = matcher.upstream;
     }
 
-    const requestFct =
-      options.protocol === "https:" ? https.request : http.request;
+    const isHttps = options.protocol === "https:";
+    options.agent = isHttps ? httpsAgent : httpAgent;
+    const requestFct = isHttps ? https.request : http.request;
 
     const upstreamRequest = requestFct(options, (upstreamResponse) => {
       const responseMiddlewaresToApply = [
@@ -119,7 +136,7 @@ export function createGateway(config: Config, port: number): http.Server {
 
       clientResponse.writeHead(
         upstreamResponse.statusCode || 502,
-        upstreamResponse.headers
+        removeHopByHopHeaders(upstreamResponse.headers)
       );
       upstreamResponse.pipe(clientResponse);
     });
@@ -177,5 +194,10 @@ export function createGateway(config: Config, port: number): http.Server {
 
   logger.log(`Starting Donkey Gateway 🐴 on http://localhost:${port}`);
 
-  return http.createServer(onRequest).listen(port);
+  const server = http.createServer(onRequest);
+  server.on("close", () => {
+    httpAgent.destroy();
+    httpsAgent.destroy();
+  });
+  return server.listen(port);
 }
