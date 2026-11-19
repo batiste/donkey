@@ -1,6 +1,10 @@
 import * as http from "http";
 export interface IMatcher {
   /**
+   * Name used in metrics and access logs. The default is "upstream:port".
+   */
+  name?: string;
+  /**
    * Upstream domain, with no protocol and no path.
    */
   upstream: string;
@@ -84,6 +88,23 @@ export interface Config {
    * The default is { keepAlive: true }.
    */
   upstreamAgentOptions?: http.AgentOptions;
+  /**
+   * Endpoints answered by the gateway itself (GET and HEAD only).
+   */
+  admin?: {
+    /**
+     * Health check path, answers 200 while the gateway is running.
+     * The default is "/__donkey/health", false disables it.
+     */
+    healthPath?: string | false;
+    /**
+     * Prometheus metrics path, disabled by default. Metrics are served on
+     * the public port: restrict access to it at your load balancer.
+     */
+    metricsPath?: string | false;
+  };
+  /** Log one JSON line per request. The default is true. */
+  accessLog?: boolean;
 }
 
 /**

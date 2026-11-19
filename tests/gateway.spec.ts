@@ -19,6 +19,7 @@ interface Ports {
 export function getConfig(ports: Ports): Config {
   const matchers: IMatcher[] = [
     {
+      name: "backend1",
       uris: ["/admin/"],
       upstream: "localhost",
       port: ports.backend1,
@@ -89,7 +90,11 @@ export function getConfig(ports: Ports): Config {
 
   const global: RequestMiddleware[] = [createXRequestIdMiddleware()];
 
-  return { matchers, global: { requestMiddlewares: global } };
+  return {
+    matchers,
+    global: { requestMiddlewares: global },
+    admin: { metricsPath: "/__donkey/metrics" },
+  };
 }
 
 function jsonBackend(type: string): http.RequestListener {
@@ -397,6 +402,78 @@ describe("gateway", () => {
     }
     backend1.off("connection", counter);
     expect(connections).toBeLessThanOrEqual(1);
+  });
+
+  it("answers the health check without proxying", async () => {
+    const response = await request.get("/__donkey/health");
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({ status: "ok" });
+
+    // other methods are proxied as usual (and nothing matches here)
+    const post = await request.post("/__donkey/health");
+    expect(post.status).toEqual(404);
+  });
+
+  it("exposes Prometheus metrics", async () => {
+    await request.get("/admin/metrics-test");
+    await request.get("/does-not-exist");
+    const response = await request.get("/__donkey/metrics");
+    expect(response.status).toEqual(200);
+    expect(response.headers["content-type"]).toContain("text/plain");
+    expect(response.text).toMatch(
+      /donkey_requests_total\{matcher="backend1",method="GET",status="200"\} \d+/
+    );
+    expect(response.text).toMatch(
+      /donkey_requests_total\{matcher="none",method="GET",status="404"\} \d+/
+    );
+    expect(response.text).toContain(
+      'donkey_request_duration_seconds_bucket{matcher="backend1",le="+Inf"}'
+    );
+    expect(response.text).toContain("donkey_in_flight_requests 1");
+    // admin endpoints get their own label, not "none"
+    expect(response.text).toMatch(
+      /donkey_requests_total\{matcher="admin",method="GET",status="200"\} \d+/
+    );
+    expect(response.text).not.toMatch(
+      /donkey_requests_total\{matcher="none",method="GET",status="200"\}/
+    );
+  });
+
+  it("writes one JSON access log line per request", async () => {
+    const lines: string[] = [];
+    const spy = jest
+      .spyOn(process.stdout, "write")
+      .mockImplementation((chunk: any) => {
+        lines.push(String(chunk));
+        return true;
+      });
+    process.env.LOG_LEVEL = "info";
+    try {
+      await request.get("/__donkey/health");
+      await request
+        .get("/admin/logged?token=secret")
+        .set("x-request-id", "req-42")
+        .set("Authorization", "Bearer secret");
+      // the access log is written on "close", after the response is sent
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      process.env.LOG_LEVEL = "silent";
+      spy.mockRestore();
+    }
+    const entries = lines
+      .map((line) => JSON.parse(line))
+      .filter((entry) => entry.msg === "access");
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      level: "info",
+      method: "GET",
+      path: "/admin/logged",
+      status: "200",
+      matcher: "backend1",
+      requestId: "req-42",
+    });
+    expect(typeof entries[0].durationMs).toBe("number");
+    expect(lines.join("")).not.toContain("secret");
   });
 
   it("returns 500 when a middleware throws", async () => {

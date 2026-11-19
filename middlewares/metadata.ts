@@ -46,7 +46,7 @@ export function createMetadataMiddleware(
         const metadata = await options.fetchMetadata(clientRequest);
         return metadata;
       } catch (e: any) {
-        logger.error("Error trying to fetchMetadata", e);
+        logger.error("Error trying to fetchMetadata", { error: e });
         return {};
       }
     }
@@ -72,7 +72,7 @@ export function createMetadataMiddleware(
       try {
         metadata = await options.fetchMetadata(clientRequest);
       } catch (e: any) {
-        logger.error("Error trying to fetchMetadata", e);
+        logger.error("Error trying to fetchMetadata", { error: e });
         metadata = null;
       }
       if (metadata) {

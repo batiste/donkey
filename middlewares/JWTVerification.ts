@@ -40,7 +40,7 @@ export function verify(
       if (e.message === "invalid signature") {
         continue;
       }
-      logger.warn("JWT verification error", e);
+      logger.warn("JWT verification error", { error: e });
       return false;
     }
   }

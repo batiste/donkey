@@ -1,4 +1,10 @@
-export { createGateway } from "./gateway";
+export { createGateway, DEFAULT_HEALTH_PATH } from "./gateway";
+export { Metrics } from "./metrics";
+export {
+  removeHopByHopHeaders,
+  setForwardedHeaders,
+  HOP_BY_HOP_HEADERS,
+} from "./headers";
 export {
   matchRequest,
   matchUris,
