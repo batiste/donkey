@@ -18,12 +18,51 @@ Can replace Kong for basic purposes.
   * Basic Auth middleware
   * Metadata middleware (can be used to fetch extra data for a user, organization or anything else specific about the request, uses redis)
   * Authentication middleware
+  * Proxy headers: `X-Forwarded-For/Host/Proto`, hop-by-hop headers removed
+  * Request path normalisation (protects path based rules against `../` traversal)
+  * Health check endpoint, Prometheus metrics and JSON access logs
 
 
 ## Install
 
+Requires Node.js 22 or later.
+
 ```bash
 npm install donkey-gateway
+```
+
+## Use as a library
+
+```ts
+import {
+  createGateway,
+  createBasicAuthMiddleware,
+  createXRequestIdMiddleware,
+  Config,
+} from "donkey-gateway";
+
+const config: Config = {
+  matchers: [
+    {
+      name: "admin",
+      uris: ["/admin/"],
+      upstream: "example.com",
+      requestMiddlewares: [createBasicAuthMiddleware("admin", "1234")],
+    },
+  ],
+  global: { requestMiddlewares: [createXRequestIdMiddleware()] },
+};
+
+createGateway(config, 3000);
+```
+
+## Use the CLI
+
+The CLI imports a module exporting a `getConfig()` function (it may be async)
+and starts the gateway:
+
+```bash
+npx donkey --run --port 3000 --config ./build/configuration.js
 ```
 
 ## Use the boilerplate project
@@ -102,6 +141,10 @@ export function getConfig(): Config {
 ```ts
 export interface IMatcher {
   /**
+   * Name used in metrics and access logs. The default is "upstream:port".
+   */
+  name?: string;
+  /**
    * Upstream domain, with no protocol and no path.
    */
   upstream: string;
@@ -148,6 +191,71 @@ export interface IMatcher {
    */
   stripeUri?: boolean;
 }
+```
+
+## Config options
+
+```ts
+export interface Config {
+  matchers: IMatcher[];
+  /** Middlewares applied to all requests. */
+  global?: {
+    requestMiddlewares?: RequestMiddleware[];
+    responseMiddlewares?: ResponseMiddleware[];
+  };
+  /** Default upstream timeout in seconds. The default is 30. */
+  defaultTimeout?: number;
+  /**
+   * Set to true when Donkey runs behind a proxy or load balancer you trust:
+   * existing X-Forwarded-* headers are then kept and extended. By default
+   * Donkey is the edge and overwrites them so clients cannot spoof them.
+   */
+  trustForwardedHeaders?: boolean;
+  /** Options of the upstream HTTP(S) agents. The default is { keepAlive: true }. */
+  upstreamAgentOptions?: http.AgentOptions;
+  admin?: {
+    /** Health check path (GET/HEAD). Default "/__donkey/health", false disables it. */
+    healthPath?: string | false;
+    /** Prometheus metrics path (GET/HEAD). Disabled by default. */
+    metricsPath?: string | false;
+  };
+  /** One JSON access log line per request. The default is true. */
+  accessLog?: boolean;
+}
+```
+
+## Request handling
+
+* **Path normalisation**: dot segments and duplicate slashes are resolved before
+  matching, so `/public/../admin` is matched and forwarded as `/admin`. Requests
+  containing encoded traversal (`%2e%2e`, `..%2f`), backslashes or non origin-form
+  URLs are rejected with `400`.
+* **Errors**: a middleware throwing answers `500`, an unreachable upstream `502` and
+  an upstream timeout `504`. If the client disconnects, the upstream request is
+  cancelled.
+* **Headers**: hop-by-hop headers (`Connection`, `Keep-Alive`, `TE`, `Upgrade`,
+  `Transfer-Encoding`, `Proxy-*` and any header listed in `Connection`) are not
+  forwarded, in either direction. `X-Forwarded-For`, `X-Forwarded-Host` and
+  `X-Forwarded-Proto` are set on the upstream request.
+
+## Observability
+
+* **Health check**: `GET /__donkey/health` answers `{"status":"ok"}`.
+* **Metrics**: set `admin.metricsPath` (e.g. `"/__donkey/metrics"`) to expose
+  `donkey_requests_total`, `donkey_request_duration_seconds` and
+  `donkey_in_flight_requests` in the Prometheus format. They are served on the
+  public port, so restrict access to that path at your load balancer.
+* **Logs**: JSON lines on stdout (warnings and errors on stderr). Set the level
+  with `LOG_LEVEL=debug|info|warn|error|silent`. Each request produces an
+  `access` line; the query string is left out as it may contain secrets.
+
+## Development
+
+```bash
+npm ci
+npm run lint    # ESLint + type check of the tests
+npm test        # Jest
+npm run build   # TypeScript to ./build
 ```
 
 ## Performance and scalability
