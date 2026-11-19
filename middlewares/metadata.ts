@@ -27,6 +27,9 @@ export function createMetadataMiddleware(
   const url =
     options.redisURL || process.env.REDIS_URL || "redis://localhost:6379";
   const client = redis.createClient(url);
+  client.on("error", (error) => {
+    logger.error("Metadata middleware: redis error", { error });
+  });
   logger.log(`Metadata limitation middleware connected on ${url}`);
 
   const shutdown = () => {
@@ -41,10 +44,10 @@ export function createMetadataMiddleware(
     if (!options.key) {
       try {
         const metadata = await options.fetchMetadata(clientRequest);
-        return metadata
-      } catch(e: any) {
-        logger.error('Error trying to fetchMetadata', e)
-        return {}
+        return metadata;
+      } catch (e: any) {
+        logger.error("Error trying to fetchMetadata", { error: e });
+        return {};
       }
     }
     const key = await options.key(clientRequest);
@@ -55,7 +58,12 @@ export function createMetadataMiddleware(
         if (!reply) {
           resolve(null);
         } else {
-          resolve(JSON.parse(reply));
+          try {
+            resolve(JSON.parse(reply));
+          } catch (error: any) {
+            logger.warn("Metadata middleware: invalid cached value", { error });
+            resolve(null);
+          }
         }
       });
     });
@@ -63,9 +71,9 @@ export function createMetadataMiddleware(
     if (!metadata) {
       try {
         metadata = await options.fetchMetadata(clientRequest);
-      } catch(e: any) {
-        logger.error('Error trying to fetchMetadata', e)
-        metadata = null 
+      } catch (e: any) {
+        logger.error("Error trying to fetchMetadata", { error: e });
+        metadata = null;
       }
       if (metadata) {
         client.set(metadataKey, JSON.stringify(metadata), "EX", expiry);

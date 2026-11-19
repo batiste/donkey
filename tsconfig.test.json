@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["*.ts", "middlewares/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "build"],
+  "compilerOptions": { "noEmit": true }
+}

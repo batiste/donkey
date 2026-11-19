@@ -1,12 +1,13 @@
-FROM node:14
+FROM node:24-slim
 
 WORKDIR /usr/src/donkey
+RUN chown node:node /usr/src/donkey
+USER node
 
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
+RUN npm ci --ignore-scripts
 
-RUN npm install
-
-COPY . .
+COPY --chown=node:node . .
 
 EXPOSE 3000
 

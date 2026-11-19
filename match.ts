@@ -1,5 +1,45 @@
 import * as http from "http";
+import * as path from "path";
 import { Config, IMatch, IMatcher, IMatcherCriteria, Request } from "./schema";
+
+/**
+ * Normalise the path of a request URL so that matching is done on the path
+ * the upstream will actually resolve:
+ * - dot segments are resolved ("/public/../admin" becomes "/admin")
+ * - duplicate slashes are collapsed ("//admin" becomes "/admin")
+ *
+ * Returns null for URLs that must be rejected: anything that is not an
+ * origin-form path, backslashes, and percent-encoded dot segments or
+ * slashes that could be decoded into a traversal by the upstream
+ * (e.g. "/public/%2e%2e/admin" or "/public/..%2fadmin").
+ */
+export function normalizeUrl(url: string): string | null {
+  if (!url.startsWith("/")) {
+    return null;
+  }
+  const queryIndex = url.indexOf("?");
+  const rawPath = queryIndex === -1 ? url : url.slice(0, queryIndex);
+  const query = queryIndex === -1 ? "" : url.slice(queryIndex);
+
+  if (rawPath.includes("\\")) {
+    return null;
+  }
+
+  const normalized = path.posix.normalize(rawPath);
+
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(normalized);
+  } catch {
+    return null;
+  }
+  const segments = decoded.split(/[/\\]/);
+  if (segments.some((segment) => segment === "." || segment === "..")) {
+    return null;
+  }
+
+  return normalized + query;
+}
 
 export function matchUris(
   uris: (string | RegExp)[],

@@ -1,6 +1,10 @@
 import * as http from "http";
 export interface IMatcher {
   /**
+   * Name used in metrics and access logs. The default is "upstream:port".
+   */
+  name?: string;
+  /**
    * Upstream domain, with no protocol and no path.
    */
   upstream: string;
@@ -72,6 +76,35 @@ export interface Config {
     responseMiddlewares?: ResponseMiddleware[];
   };
   defaultTimeout?: number;
+  /**
+   * Set to true when Donkey runs behind another proxy or load balancer that
+   * you trust: existing X-Forwarded-For/Host/Proto headers are then kept and
+   * extended. The default is false: Donkey is the edge and overwrites them,
+   * so clients cannot spoof them.
+   */
+  trustForwardedHeaders?: boolean;
+  /**
+   * Options for the HTTP(S) agents used to connect to the upstreams.
+   * The default is { keepAlive: true }.
+   */
+  upstreamAgentOptions?: http.AgentOptions;
+  /**
+   * Endpoints answered by the gateway itself (GET and HEAD only).
+   */
+  admin?: {
+    /**
+     * Health check path, answers 200 while the gateway is running.
+     * The default is "/__donkey/health", false disables it.
+     */
+    healthPath?: string | false;
+    /**
+     * Prometheus metrics path, disabled by default. Metrics are served on
+     * the public port: restrict access to it at your load balancer.
+     */
+    metricsPath?: string | false;
+  };
+  /** Log one JSON line per request. The default is true. */
+  accessLog?: boolean;
 }
 
 /**
