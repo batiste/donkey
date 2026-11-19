@@ -2,8 +2,8 @@
   "name": "donkey-gateway",
   "version": "1.0.6",
   "description": "API Gateway based on static configuration files",
-  "main": "lib/donkey.js",
-  "types": "lib/donkey.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "prepublishOnly": "npm run lint && npm test",
     "preversion": "npm run lint",
@@ -49,5 +49,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "bin": {
+    "donkey": "build/donkey.js"
   }
 }
