@@ -5,7 +5,7 @@ RUN chown node:node /usr/src/donkey
 USER node
 
 COPY --chown=node:node package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY --chown=node:node . .
 
